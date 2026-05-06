@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroControl | Vacunaciones</title>
+    <link rel="stylesheet" href="../Css/vacunaciones.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+    <span id="toastMsg">Operación realizada correctamente</span>
+</div>
+
+<!-- SIDEBAR -->
+<aside>
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#061006" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C6 2 3 7 3 12s3 10 9 10 9-5 9-10S18 2 12 2"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <circle cx="9" cy="9" r=".8" fill="#061006"/>
+                    <circle cx="15" cy="9" r=".8" fill="#061006"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <div class="logo-name">AGRO<span>CONTROL</span></div>
+                <div class="logo-sub">Gestión Ganadera</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="menu-label">Principal</div>
+            <div class="menu">
+                <a href="Dashboard.php">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                    Dashboard
+                </a>
+                <a href="Registro_Vacas.php">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="8" rx="7" ry="5"/><path d="M5 13c0 3.3 3.1 6 7 6s7-2.7 7-6"/></svg>
+                    Gestión de Vacas
+                </a>
+                <a href="produccion_lechera.php">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                    Producción Lechera
+                </a>
+                <a href="potrero.php">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    Potreros y Mangas
+                </a>
+                <a href="vacunaciones.html" class="active">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 3l2 2-7 7"/><path d="M17 5l2 2"/><path d="M3 21l9-9"/><path d="M14.5 5.5l-11 11 4 4 11-11z"/></svg>
+                    Vacunaciones
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-section">
+            <div class="menu-label">Sistema</div>
+            <div class="menu">
+                <a href="logout.php" class="logout-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">Principal / Sanidad</div>
+            <div class="topbar-title">Vacunaciones</div>
+        </div>
+        <div class="topbar-right">
+            <button class="btn-ghost" onclick="verResumen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Reporte ICA
+            </button>
+            <button class="btn-ghost" onclick="exportarPDF()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>
+                Exportar PDF
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <button class="btn-primary" onclick="abrirModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Programar vacuna
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-label">Total registros</div>
+                <div class="stat-icon si-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                </div>
+            </div>
+            <div class="stat-value" id="cnt-total">—</div>
+            <div class="stat-meta">vacunas registradas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-label">Pendientes</div>
+                <div class="stat-icon si-amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                </div>
+            </div>
+            <div class="stat-value amber" id="cnt-pendiente">—</div>
+            <div class="stat-meta">por aplicar</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-label">Aplicadas</div>
+                <div class="stat-icon si-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                </div>
+            </div>
+            <div class="stat-value accent" id="cnt-aplicada">—</div>
+            <div class="stat-meta">completadas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-label">Vencidas</div>
+                <div class="stat-icon si-danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+            </div>
+            <div class="stat-value danger" id="cnt-vencida">—</div>
+            <div class="stat-meta">requieren atención</div>
+        </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div class="alerta-panel" id="alerta-box" style="display:none">
+        <div class="alerta-head">
+            <div class="alerta-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span class="alerta-title">Vacunas en los próximos 7 días</span>
+        </div>
+        <div id="alerta-lista" class="alerta-lista"></div>
+    </div>
+
+    <!-- FILTROS + TABLA -->
+    <div class="contenedorTabla">
+        <div class="table-toolbar">
+            <div class="tt-left">
+                <span class="table-heading">Registros de vacunación</span>
+            </div>
+            <div class="filters-wrap">
+                <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+                    <input type="text" id="filtro-buscar" placeholder="Buscar vaca o vacuna…" oninput="filtrar()">
+                </div>
+                <div class="select-wrap">
+                    <select id="filtro-estado" onchange="filtrar()">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="aplicada">Aplicada</option>
+                        <option value="vencida">Vencida</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Vaca</th>
+                    <th>Vacuna</th>
+                    <th>Fecha programada</th>
+                    <th>Días restantes</th>
+                    <th>Estado</th>
+                    <th>Responsable</th>
+                    <th>Observaciones</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body">
+                <tr>
+                    <td colspan="8" class="empty-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                        Cargando registros…
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div><!-- fin .main -->
+
+<!-- ══════════════════════════════════════
+     MODAL: PROGRAMAR VACUNA
+     ══════════════════════════════════════ -->
+<div class="modalOverlay" id="modal-nueva" onclick="cerrarModalFuera(event,'modal-nueva')">
+    <div class="contenedorModal1">
+        <div class="modal-header">
+            <div class="modal-header-info">
+                <div class="modal-eyebrow"><span class="eyebrow-dot"></span>Nueva vacuna</div>
+                <h2>Programar vacuna</h2>
+                <p class="modal-subtitle">Registra una vacuna pendiente o ya aplicada</p>
+            </div>
+            <button class="btn-cerrar" onclick="cerrarModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="modal-body">
+            <div class="field">
+                <label class="field-label">Vaca <span class="field-req">*</span></label>
+                <select id="f-vaca"><option value="">Seleccione una vaca…</option></select>
+            </div>
+            <div class="field">
+                <label class="field-label">Tipo de vacuna <span class="field-req">*</span></label>
+                <select id="f-tipo"><option value="">Seleccione…</option></select>
+            </div>
+            <div class="field-row-2">
+                <div class="field">
+                    <label class="field-label">Fecha programada <span class="field-req">*</span></label>
+                    <input type="date" id="f-fecha">
+                </div>
+                <div class="field">
+                    <label class="field-label">Dosis (ml)</label>
+                    <input type="number" id="f-dosis" placeholder="Ej: 5" step="0.5" min="0">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Responsable</label>
+                <input type="text" id="f-responsable" placeholder="Veterinario o encargado">
+            </div>
+            <div class="field">
+                <label class="field-label">Observaciones</label>
+                <textarea id="f-obs" placeholder="Notas adicionales…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="modal-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Campos con * son obligatorios
+            </span>
+            <div class="modal-footer-btns">
+                <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-modal-submit" onclick="guardarVacuna()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL: MARCAR APLICADA
+     ══════════════════════════════════════ -->
+<div class="modalOverlay" id="modal-aplicar" onclick="cerrarModalFuera(event,'modal-aplicar')">
+    <div class="contenedorModal1">
+        <div class="modal-header">
+            <div class="modal-header-info">
+                <div class="modal-eyebrow modal-eyebrow-blue"><span class="eyebrow-dot-blue"></span>Confirmar aplicación</div>
+                <h2>Marcar como aplicada</h2>
+                <p class="modal-subtitle" id="aplicar-sub"></p>
+            </div>
+            <button class="btn-cerrar" onclick="cerrarAplicar()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-divider"></div>
+        <input type="hidden" id="aplicar-id">
+        <div class="modal-body">
+            <div class="field-row-2">
+                <div class="field">
+                    <label class="field-label">Fecha de aplicación <span class="field-req">*</span></label>
+                    <input type="date" id="aplicar-fecha">
+                </div>
+                <div class="field">
+                    <label class="field-label">Dosis aplicada (ml)</label>
+                    <input type="number" id="aplicar-dosis" step="0.5" min="0">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Responsable</label>
+                <input type="text" id="aplicar-responsable" placeholder="Veterinario o encargado">
+            </div>
+            <div class="field">
+                <label class="field-label">Observaciones</label>
+                <textarea id="aplicar-obs" placeholder="Notas adicionales…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="modal-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Confirma la fecha real de aplicación
+            </span>
+            <div class="modal-footer-btns">
+                <button class="btn-modal-cancel" onclick="cerrarAplicar()">Cancelar</button>
+                <button class="btn-modal-submit btn-modal-blue" onclick="confirmarAplicar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL: REPORTE ICA
+     ══════════════════════════════════════ -->
+<div class="modalOverlay" id="modal-resumen" onclick="cerrarModalFuera(event,'modal-resumen')">
+    <div class="contenedorModal1" style="max-width:560px">
+        <div class="modal-header">
+            <div class="modal-header-info">
+                <div class="modal-eyebrow"><span class="eyebrow-dot"></span>Sanitario</div>
+                <h2>Reporte ICA</h2>
+                <p class="modal-subtitle">Cumplimiento de vacunación del hato</p>
+            </div>
+            <button class="btn-cerrar" onclick="cerrarResumen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="modal-body" id="resumen-contenido"></div>
+        <div class="modal-footer">
+            <span></span>
+            <div class="modal-footer-btns">
+                <button class="btn-modal-cancel" onclick="cerrarResumen()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════
+   LÓGICA ORIGINAL — sin cambios
+   ═══════════════════════════════ */
+const API = 'vacunaciones.php';
+let todos = [];
+
+function fmt(f) {
+    if (!f) return '—';
+    const [y, m, d] = f.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function badge(e) {
+    const map = {
+        pendiente: ['s-pendiente', 'Pendiente'],
+        aplicada:  ['s-aplicada',  'Aplicada'],
+        vencida:   ['s-vencida',   'Vencida']
+    };
+    const [cls, lbl] = map[e] || ['', e];
+    return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+
+function diasTexto(d) {
+    if (d < 0)   return `<span class="dias danger">Vencida</span>`;
+    if (d === 0) return `<span class="dias amber">Hoy</span>`;
+    if (d <= 7)  return `<span class="dias amber">${d} días</span>`;
+    return `<span class="dias muted">${d} días</span>`;
+}
+
+async function cargarTodo() {
+    try {
+        const [vacsR, tiposR, vacasR, alertasR] = await Promise.all([
+            fetch(`${API}?action=listar`),
+            fetch(`${API}?action=tipos`),
+            fetch(`${API}?action=vacas`),
+            fetch(`${API}?action=alertas`)
+        ]);
+        todos         = await vacsR.json();
+        const tipos   = await tiposR.json();
+        const vacas   = await vacasR.json();
+        const alertas = await alertasR.json();
+
+        const sv = document.getElementById('f-vaca');
+        vacas.forEach(v => {
+            sv.innerHTML += `<option value="${v.id}">${v.codigo} — ${v.nombre}</option>`;
+        });
+
+        const st = document.getElementById('f-tipo');
+        tipos.forEach(t => {
+            st.innerHTML += `<option value="${t.id}">${t.nombre}${t.obligatoria_ica == 1 ? ' (ICA)' : ''}</option>`;
+        });
+
+        document.getElementById('cnt-total').textContent     = todos.length;
+        document.getElementById('cnt-pendiente').textContent = todos.filter(x => x.estado === 'pendiente').length;
+        document.getElementById('cnt-aplicada').textContent  = todos.filter(x => x.estado === 'aplicada').length;
+        document.getElementById('cnt-vencida').textContent   = todos.filter(x => x.estado === 'vencida').length;
+
+        if (alertas.length) {
+            document.getElementById('alerta-box').style.display = 'block';
+            document.getElementById('alerta-lista').innerHTML = alertas.map(a => `
+                <div class="alerta-item">
+                    <div class="alerta-item-left">
+                        <div class="cow-avatar av-amber">${a.nombre_vaca.charAt(0).toUpperCase()}</div>
+                        <span>${a.nombre_vaca} — <strong>${a.tipo_vacuna}</strong></span>
+                    </div>
+                    <span class="alerta-dias">${a.dias_restantes == 0 ? 'Hoy' : a.dias_restantes == 1 ? 'Mañana' : 'En ' + a.dias_restantes + ' días'}</span>
+                </div>`).join('');
+        }
+
+        renderTabla(todos);
+    } catch (e) {
+        console.error(e);
+        document.getElementById('tabla-body').innerHTML = `
+            <tr><td colspan="8" class="empty-row">Error al cargar los datos</td></tr>`;
+    }
+}
+
+function renderTabla(data) {
+    const b = document.getElementById('tabla-body');
+    if (!data.length) {
+        b.innerHTML = `<tr><td colspan="8" class="empty-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Sin registros de vacunación</td></tr>`;
+        return;
+    }
+    b.innerHTML = data.map(r => `
+        <tr>
+            <td>
+                <div class="cow-cell">
+                    <div class="cow-avatar">${r.nombre_vaca.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div class="cow-name">${r.nombre_vaca}</div>
+                        <div class="cow-code">${r.codigo_vaca}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="vacuna-cell">
+                    <span class="vacuna-nombre">${r.tipo_vacuna}</span>
+                    ${r.obligatoria_ica == 1 ? '<span class="badge-ica">ICA</span>' : ''}
+                </div>
+            </td>
+            <td><span class="fecha-tag">${fmt(r.fecha_programada)}</span></td>
+            <td>${diasTexto(parseInt(r.dias_restantes))}</td>
+            <td>${badge(r.estado)}</td>
+            <td><span class="responsable-text">${r.responsable || '—'}</span></td>
+            <td><span class="obs-text">${r.observaciones ? r.observaciones : '—'}</span></td>
+            <td>
+                <div class="actions-cell">
+                    ${r.estado === 'pendiente' ? `
+                    <button class="btn-icon-blue" onclick="abrirAplicar(${r.id},'${r.nombre_vaca}','${r.tipo_vacuna}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                        Aplicar
+                    </button>` : ''}
+                    <button class="btn-icon-del" onclick="eliminar(${r.id})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                        Eliminar
+                    </button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function filtrar() {
+    renderTabla(obtenerFiltrados());
+}
+
+function obtenerFiltrados() {
+    const estado = document.getElementById('filtro-estado').value;
+    const buscar = document.getElementById('filtro-buscar').value.toLowerCase();
+    return todos.filter(r => {
+        const okE = !estado || r.estado === estado;
+        const okB = !buscar ||
+            r.nombre_vaca.toLowerCase().includes(buscar) ||
+            r.tipo_vacuna.toLowerCase().includes(buscar) ||
+            r.codigo_vaca.toLowerCase().includes(buscar);
+        return okE && okB;
+    });
+}
+
+function exportarPDF() {
+    const data = obtenerFiltrados();
+    if (!data.length) {
+        alert('No hay registros para exportar con los filtros actuales');
+        return;
+    }
+
+    const fecha = new Date();
+    const generado = fecha.toLocaleString('es-CO');
+    const estado = document.getElementById('filtro-estado').value || 'Todos';
+    const buscar = document.getElementById('filtro-buscar').value.trim() || 'Sin filtro';
+
+    const filas = data.map(r => `
+        <tr>
+            <td>${r.codigo_vaca} - ${r.nombre_vaca}</td>
+            <td>${r.tipo_vacuna}${r.obligatoria_ica == 1 ? ' (ICA)' : ''}</td>
+            <td>${fmt(r.fecha_programada)}</td>
+            <td>${r.dias_restantes < 0 ? 'Vencida' : r.dias_restantes === 0 ? 'Hoy' : r.dias_restantes + ' dias'}</td>
+            <td>${r.estado}</td>
+            <td>${r.responsable || '-'}</td>
+            <td>${r.observaciones || '-'}</td>
+        </tr>
+    `).join('');
+
+    const win = window.open('', '_blank', 'width=1100,height=800');
+    if (!win) {
+        alert('El navegador bloqueo la ventana emergente. Permite ventanas emergentes para exportar el PDF.');
+        return;
+    }
+
+    win.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Vacunaciones - Exportacion PDF</title>
+            <style>
+                body { font-family: Arial, sans-serif; color: #1f2937; margin: 28px; }
+                h1 { margin: 0 0 6px; font-size: 26px; }
+                .sub { color: #4b5563; margin-bottom: 18px; }
+                .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+                .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 12px; }
+                .card b { display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
+                table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; vertical-align: top; }
+                th { background: #f3f4f6; font-size: 11px; text-transform: uppercase; }
+                .footer { margin-top: 18px; font-size: 11px; color: #6b7280; }
+                @media print {
+                    body { margin: 16px; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="margin-bottom:16px;">
+                <button onclick="window.print()" style="padding:10px 14px; border:0; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer;">Guardar como PDF</button>
+            </div>
+            <h1>Registros de Vacunacion</h1>
+            <div class="sub">AgroControl - Reporte generado para impresion o guardado en PDF</div>
+            <div class="meta">
+                <div class="card"><b>Generado</b>${generado}</div>
+                <div class="card"><b>Estado</b>${estado}</div>
+                <div class="card"><b>Busqueda</b>${buscar}</div>
+                <div class="card"><b>Total registros</b>${data.length}</div>
+                <div class="card"><b>Aplicadas</b>${data.filter(r => r.estado === 'aplicada').length}</div>
+                <div class="card"><b>Pendientes/Vencidas</b>${data.filter(r => r.estado !== 'aplicada').length}</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vaca</th>
+                        <th>Vacuna</th>
+                        <th>Fecha programada</th>
+                        <th>Dias restantes</th>
+                        <th>Estado</th>
+                        <th>Responsable</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+            <div class="footer">Este archivo refleja los registros visibles en el modulo al momento de exportar.</div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    win.onload = function() {
+        win.print();
+    };
+}
+
+/* ── MODAL NUEVA ── */
+function abrirModal() {
+    document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-nueva').classList.add('activo');
+}
+function cerrarModal() { document.getElementById('modal-nueva').classList.remove('activo'); }
+
+async function guardarVacuna() {
+    const body = {
+        vaca_id: document.getElementById('f-vaca').value,
+        tipo_vacuna_id: document.getElementById('f-tipo').value,
+        fecha_programada: document.getElementById('f-fecha').value,
+        dosis_ml: document.getElementById('f-dosis').value,
+        responsable: document.getElementById('f-responsable').value,
+        observaciones: document.getElementById('f-obs').value
+    };
+    if (!body.vaca_id || !body.tipo_vacuna_id || !body.fecha_programada) {
+        alert('Completa los campos obligatorios (*)'); return;
+    }
+    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const res = await r.json();
+    if (res.success) { cerrarModal(); mostrarToast('Vacuna programada correctamente'); setTimeout(()=>location.reload(),1200); }
+    else alert('Error: ' + res.error);
+}
+
+/* ── MODAL APLICAR ── */
+function abrirAplicar(id, vaca, tipo) {
+    document.getElementById('aplicar-id').value = id;
+    document.getElementById('aplicar-sub').textContent = vaca + ' — ' + tipo;
+    document.getElementById('aplicar-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-aplicar').classList.add('activo');
+}
+function cerrarAplicar() { document.getElementById('modal-aplicar').classList.remove('activo'); }
+
+async function confirmarAplicar() {
+    const body = {
+        id: document.getElementById('aplicar-id').value,
+        fecha_aplicada: document.getElementById('aplicar-fecha').value,
+        dosis_ml: document.getElementById('aplicar-dosis').value,
+        responsable: document.getElementById('aplicar-responsable').value,
+        observaciones: document.getElementById('aplicar-obs').value
+    };
+    if (!body.fecha_aplicada) { alert('Ingresa la fecha de aplicación'); return; }
+    const r = await fetch(API, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const res = await r.json();
+    if (res.success) { cerrarAplicar(); mostrarToast('Vacuna marcada como aplicada'); setTimeout(()=>location.reload(),1200); }
+    else alert('Error: ' + res.error);
+}
+
+/* ── MODAL REPORTE ICA ── */
+async function verResumen() {
+    const r = await fetch(`${API}?action=resumen`);
+    const data = await r.json();
+    document.getElementById('resumen-contenido').innerHTML = `
+        <table class="reporte-table">
+            <thead>
+                <tr>
+                    <th>Vacuna</th>
+                    <th class="th-green">Aplicadas</th>
+                    <th class="th-amber">Pendientes</th>
+                    <th class="th-danger">Vencidas</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(r => `
+                <tr>
+                    <td>
+                        <span class="vacuna-nombre">${r.tipo_vacuna}</span>
+                        ${r.obligatoria_ica == 1 ? '<span class="badge-ica">ICA</span>' : ''}
+                    </td>
+                    <td class="td-green">${r.aplicadas || 0}</td>
+                    <td class="td-amber">${r.pendientes || 0}</td>
+                    <td class="td-danger">${r.vencidas || 0}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    document.getElementById('modal-resumen').classList.add('activo');
+}
+function cerrarResumen() { document.getElementById('modal-resumen').classList.remove('activo'); }
+
+/* ── ELIMINAR ── */
+async function eliminar(id) {
+    if (!confirm('¿Eliminar este registro de vacunación?')) return;
+    const r = await fetch(`${API}?id=${id}`, { method:'DELETE' });
+    const res = await r.json();
+    if (res.success) { mostrarToast('Registro eliminado'); setTimeout(()=>location.reload(),1200); }
+    else alert('Error: ' + res.error);
+}
+
+/* ── CERRAR MODAL POR BACKDROP ── */
+function cerrarModalFuera(e, id) {
+    if (e.target === document.getElementById(id))
+        document.getElementById(id).classList.remove('activo');
+}
+
+/* ── TOAST ── */
+function mostrarToast(msg) {
+    document.getElementById('toastMsg').textContent = msg;
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+/* ── THEME ── */
+function toggleTheme() {
+    document.documentElement.classList.toggle('light');
+    try { localStorage.setItem('acTheme', document.documentElement.classList.contains('light') ? 'light' : 'dark'); } catch(e){}
+}
+(function(){
+    try { if (localStorage.getItem('acTheme')==='light') document.documentElement.classList.add('light'); } catch(e){}
+})();
+
+cargarTodo();
+</script>
+</body>
+</html>

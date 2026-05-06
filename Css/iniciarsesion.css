@@ -1,0 +1,281 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:'Sora',sans-serif;
+height:100vh;
+display:flex;
+
+background:
+linear-gradient(rgba(169, 173, 171, 0.9),rgba(18, 190, 81, 0.9)),
+url("../Img/vacas.jpg");
+
+background-size:cover;
+background-position:center;
+
+color:white;
+}
+
+/* CONTENEDOR */
+
+.container{
+display:flex;
+width:100%;
+height:100vh;
+}
+
+/* PANEL IZQUIERDO */
+
+.left{
+flex:1;
+
+background:linear-gradient(rgba(15,23,42,0.55),rgba(15,23,42,0.75)),
+url("https://images.unsplash.com/photo-1500595046743-cd271d694d30");
+
+background-size:cover;
+background-position:center;
+
+display:flex;
+flex-direction:column;
+justify-content:center;
+
+padding:80px;
+}
+
+.left h1{
+font-family:'Bebas Neue',sans-serif;
+font-size:90px;
+letter-spacing:3px;
+}
+
+.left span{
+color:#22c55e;
+}
+
+.left p{
+margin-top:10px;
+color:#e2e8f0;
+}
+
+/* STATS */
+
+.stats{
+display:flex;
+gap:40px;
+margin-top:40px;
+}
+
+.stat h2{
+font-family:'Bebas Neue',sans-serif;
+font-size:40px;
+color:#22c55e;
+}
+
+.stat p{
+color:#cbd5f5;
+}
+
+/* PANEL DERECHO */
+
+.right{
+width:420px;
+
+background:rgba(0,0,0,0.55);
+backdrop-filter:blur(10px);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+padding:40px;
+
+border-left:1px solid rgba(255,255,255,0.1);
+}
+
+/* FORM */
+
+.login-box{
+width:100%;
+max-width:320px;
+}
+
+/* LOGO */
+
+.logo{
+font-family:'Bebas Neue',sans-serif;
+font-size:28px;
+letter-spacing:3px;
+margin-bottom:40px;
+}
+
+.logo span{
+color:#22c55e;
+}
+
+/* TITULO */
+
+h2{
+font-family:'Bebas Neue',sans-serif;
+letter-spacing:2px;
+margin-bottom:5px;
+}
+
+.subtitle{
+font-size:12px;
+color:#cbd5f5;
+margin-bottom:25px;
+}
+
+/* INPUTS */
+
+.input-group{
+margin-bottom:18px;
+}
+
+label{
+font-size:11px;
+letter-spacing:2px;
+text-transform:uppercase;
+color:#e2e8f0;
+display:block;
+margin-bottom:6px;
+}
+
+input{
+width:100%;
+height:45px;
+
+background:rgba(30,41,59,0.7);
+
+border:1px solid rgba(34,197,94,0.4);
+
+padding:0 12px;
+color:white;
+
+border-radius:6px;
+
+transition:.3s;
+}
+
+input:focus{
+outline:none;
+border-color:#22c55e;
+box-shadow:0 0 8px rgba(34,197,94,0.5);
+}
+
+/* EXTRAS */
+
+.extras{
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+font-size:12px;
+margin-bottom:20px;
+
+color:#e2e8f0;
+}
+
+.extras input[type="checkbox"]{
+width:14px;
+height:14px;
+margin-right:6px;
+
+accent-color:#22c55e;
+}
+
+.extras label{
+display:flex;
+align-items:center;
+gap:6px;
+cursor:pointer;
+font-size:12px;
+}
+
+/* BOTON */
+
+button{
+
+width:100%;
+height:48px;
+
+border:none;
+
+background:#16a34a;
+
+color:white;
+
+font-family:'Bebas Neue',sans-serif;
+font-size:18px;
+
+letter-spacing:3px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+transition:.3s;
+}
+
+button:hover{
+background:#15803d;
+transform:scale(1.03);
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+.left{
+display:none;
+}
+
+.right{
+width:100%;
+}
+
+}
+
+/* TOAST */
+
+.toast{
+
+position: fixed;
+top: 20px;
+right: 20px;
+
+background:#16a34a;
+color:white;
+
+padding:15px 25px;
+
+border-radius:8px;
+
+font-family:'Sora',sans-serif;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+
+transform: translateX(120%);
+opacity:0;
+
+transition: transform .4s ease, opacity .4s ease;
+
+z-index:999;
+
+}
+
+.toast.show{
+transform: translateX(0);
+opacity:1;
+}
+
+.toast.error{
+background:#ef4444;
+}
+
+.toast.success{
+background:#16a34a;
+}

@@ -1,0 +1,297 @@
+@import url('./produccion_lechera.css');
+
+.page-shell {
+  padding: 22px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.intro-card,
+.current-pay-banner,
+.payment-history-card,
+.empty-history {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-lg);
+}
+
+.intro-card {
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(91,175,89,.14), transparent 34%),
+    var(--bg-card);
+}
+
+.intro-kicker {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.intro-card h1 {
+  font-size: 28px;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+
+.intro-card p {
+  color: var(--text-secondary);
+  max-width: 860px;
+  margin-bottom: 14px;
+}
+
+.intro-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cut-explanation {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cut-explanation strong {
+  color: var(--text-primary);
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.current-pay-banner {
+  padding: 18px 22px;
+  border-color: var(--accent-border);
+  background:
+    radial-gradient(circle at right top, rgba(91,175,89,.18), transparent 30%),
+    linear-gradient(135deg, rgba(91,175,89,.12), var(--bg-card));
+}
+
+.current-pay-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  color: var(--accent-text);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.current-pay-value {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.current-pay-meta {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 760px;
+}
+
+.stats-grid-quincena {
+  padding: 0;
+}
+
+.payment-history-card {
+  border-color: var(--accent-border);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.toolbar-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.toolbar-inline .table-heading {
+  margin: 0;
+}
+
+.table-scroll {
+  overflow: auto;
+  max-height: 620px;
+}
+
+.table-scroll table {
+  min-width: 900px;
+}
+
+.row-actual {
+  background: rgba(91, 175, 89, 0.09);
+}
+
+.row-actual td {
+  box-shadow: inset 0 1px 0 rgba(91, 175, 89, 0.22), inset 0 -1px 0 rgba(91, 175, 89, 0.22);
+}
+
+.chip-date {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.litros-strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.litros-strong span {
+  color: var(--accent-text);
+  font-size: 12px;
+}
+
+.payment-strong {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.payment-muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-actual {
+  color: var(--accent-text);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+}
+
+.status-cerrada {
+  color: var(--blue-text);
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+}
+
+.status-proxima {
+  color: var(--amber-text);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.filtro-wrap input[type="number"] {
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-primary);
+  width: 130px;
+}
+
+.stat-value-date,
+.stat-value-payment {
+  font-size: 22px;
+}
+
+.empty-history {
+  padding: 28px 22px;
+  text-align: center;
+}
+
+.empty-history h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.empty-history p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+@media (max-width: 1180px) {
+  .stats-grid-quincena {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .page-shell {
+    padding: 16px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    width: 100%;
+  }
+
+  .topbar-right {
+    justify-content: flex-start;
+  }
+
+  .stats-grid-quincena {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtro-wrap {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filtro-wrap input[type="number"] {
+    width: 100%;
+  }
+}
