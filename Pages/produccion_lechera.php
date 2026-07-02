@@ -1,10 +1,24 @@
+<?php
+require_once("../Config/conexion.php");
+require_login();
+$con = conexion();
+$usuario_id = current_user_id();
+$toastData = null;
+if (isset($_SESSION['toast']) && is_array($_SESSION['toast'])) {
+    $toastData = $_SESSION['toast'];
+    unset($_SESSION['toast']);
+}
+date_default_timezone_set('America/Bogota');
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroControl | Producción Lechera</title>
-    <link rel="stylesheet" href="../Css/produccion_lechera.css">
+    <link rel="stylesheet" href="../Css/layout-base.css">
+    <link rel="stylesheet" href="../Css/Dashboard.css">
+    <link rel="stylesheet" href="../Css/produccion_lechera.css?v=20260702">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,74 +26,46 @@
 <body>
 
 <?php
-session_start();
-include("../Config/conexion.php");
-$con = conexion();
-
-$usuario_id = $_SESSION['id'];
-$toastData = null;
-
-if (isset($_SESSION['toast']) && is_array($_SESSION['toast'])) {
-    $toastData = $_SESSION['toast'];
-    unset($_SESSION['toast']);
-}
-
-date_default_timezone_set('America/Bogota');
-
-$vacas = mysqli_query($con, 
-"SELECT * FROM vacas 
- WHERE estado='produccion' 
- AND usuario_id='$usuario_id'");
+$vacas = db_result($con, "SELECT * FROM vacas WHERE estado = 'produccion' AND usuario_id = ? ORDER BY nombre ASC", "i", [$usuario_id]);
 
 /* ================= FILTRO ================= */
-$condicionFecha = "";
 $desde = "";
 $hasta = "";
+$filtrarFecha = false;
 
 if (isset($_GET['desde']) && isset($_GET['hasta']) && $_GET['desde'] != "" && $_GET['hasta'] != "") {
-    $desde = $_GET['desde'];
-    $hasta = $_GET['hasta'];
-    $condicionFecha = "WHERE rl.fecha BETWEEN '$desde' AND '$hasta'";
+    try {
+        $desde = input_date($_GET, 'desde');
+        $hasta = input_date($_GET, 'hasta');
+        $filtrarFecha = true;
+    } catch (Throwable $e) {
+        app_log($e->getMessage());
+        $desde = "";
+        $hasta = "";
+    }
 }
 
 /* ================= STATS ================= */
-$totalLitros    = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COALESCE(SUM(litros),0) 
- FROM registroleche 
- WHERE usuario_id='$usuario_id'"))[0];
-
-$totalRegistros = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) 
- FROM registroleche 
- WHERE usuario_id='$usuario_id'"))[0];
+$totalLitros = (float)(db_value($con, "SELECT COALESCE(SUM(litros),0) FROM registroleche WHERE usuario_id = ?", "i", [$usuario_id]) ?? 0);
+$totalRegistros = (int)(db_value($con, "SELECT COUNT(*) FROM registroleche WHERE usuario_id = ?", "i", [$usuario_id]) ?? 0);
 
 $hoy            = date('Y-m-d');
 
-$litrosHoy      = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COALESCE(SUM(litros),0) 
- FROM registroleche 
- WHERE usuario_id='$usuario_id' 
- AND DATE(fecha)='$hoy'"))[0];
-
-$totalVacas     = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) 
- FROM vacas 
- WHERE estado='produccion' 
- AND usuario_id='$usuario_id'"))[0];
+$litrosHoy = (float)(db_value($con, "SELECT COALESCE(SUM(litros),0) FROM registroleche WHERE usuario_id = ? AND DATE(fecha) = ?", "is", [$usuario_id, $hoy]) ?? 0);
+$totalVacas = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'produccion' AND usuario_id = ?", "i", [$usuario_id]) ?? 0);
 
 /* ================= CARGAR DATOS PARA EDITAR ================= */
 /* Si viene ?editar=ID abrimos el modal con los datos precargados */
 $editRow = null;
 if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
     $editId  = (int)$_GET['editar'];
-    $editRes = mysqli_query($con, "
+    $editRow = db_one($con, "
         SELECT rl.id, rl.vaca_id, rl.fecha, rl.litros, v.nombre
         FROM registroleche rl
         INNER JOIN vacas v ON rl.vaca_id = v.id
-        WHERE rl.id = $editId
+        WHERE rl.id = ? AND rl.usuario_id = ?
         LIMIT 1
-    ");
-    $editRow = mysqli_fetch_assoc($editRes);
+    ", "ii", [$editId, $usuario_id]);
 }
 ?>
 
@@ -90,62 +76,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
 </div>
 
 <!-- SIDEBAR -->
-<aside>
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#061006" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2C6 2 3 7 3 12s3 10 9 10 9-5 9-10S18 2 12 2"/>
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                    <circle cx="9" cy="9" r=".8" fill="#061006"/>
-                    <circle cx="15" cy="9" r=".8" fill="#061006"/>
-                </svg>
-            </div>
-            <div class="logo-text">
-                <div class="logo-name">AGRO<span>CONTROL</span></div>
-                <div class="logo-sub">Gestión Ganadera</div>
-            </div>
-        </div>
-
-        <div class="nav-section">
-            <div class="menu-label">Principal</div>
-            <div class="menu">
-                <a href="Dashboard.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-                    Dashboard
-                </a>
-                <a href="Registro_Vacas.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="8" rx="7" ry="5"/><path d="M5 13c0 3.3 3.1 6 7 6s7-2.7 7-6"/></svg>
-                    Gestión de Vacas
-                </a>
-                <a href="produccion_lechera.php" class="active">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-                    Producción Lechera
-                </a>
-                <a href="potrero.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                    Potreros y Mangas
-                </a>
-                    <a href="vacunaciones.html" >
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 3l2 2-7 7"/><path d="M17 5l2 2"/><path d="M3 21l9-9"/><path d="M14.5 5.5l-11 11 4 4 11-11z"/></svg>
-                        Vacunaciones
-                    </a>
-            </div>
-        </div>
-
-        <div class="nav-divider"></div>
-
-        <div class="nav-section">
-            <div class="menu-label">Sistema</div>
-            <div class="menu">
-                <a href="logout.php" class="logout-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Cerrar sesión
-                </a>
-            </div>
-        </div>
-    </div>
-</aside>
+<?php include 'sidebar.php'; ?>
 
 <!-- MAIN -->
 <div class="main">
@@ -235,7 +166,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
         <div class="grafica-card">
             <div class="card-header">
                 <span class="card-title">Producción por vaca</span>
-                <?php if ($condicionFecha): ?>
+                <?php if ($filtrarFecha): ?>
                     <span class="filtro-badge">
                         <?php echo date('d/m', strtotime($desde)); ?> — <?php echo date('d/m', strtotime($hasta)); ?>
                     </span>
@@ -251,7 +182,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
             <div class="table-toolbar">
                 <div class="tt-left">
                     <span class="table-heading">Litros registrados</span>
-                    <?php if ($condicionFecha): ?>
+                    <?php if ($filtrarFecha): ?>
                         <span class="search-badge">
                             <?php echo htmlspecialchars($desde); ?> — <?php echo htmlspecialchars($hasta); ?>
                         </span>
@@ -261,16 +192,21 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
 
             <?php
             // Filtrar siempre por usuario_id para que cada usuario vea solo sus registros
-            $filtroUsuario = "WHERE rl.usuario_id = '$usuario_id'";
-            $filtroFecha   = $condicionFecha ? " AND rl.fecha BETWEEN '$desde' AND '$hasta'" : "";
-
-            $query = mysqli_query($con, "
+            $sqlRegistros = "
                 SELECT rl.id, rl.vaca_id, v.nombre AS vaca, rl.fecha, rl.litros
                 FROM registroleche rl
                 INNER JOIN vacas v ON rl.vaca_id = v.id
-                $filtroUsuario $filtroFecha
-                ORDER BY rl.fecha DESC
-            ");
+                WHERE rl.usuario_id = ?";
+            $typesRegistros = "i";
+            $paramsRegistros = [$usuario_id];
+            if ($filtrarFecha) {
+                $sqlRegistros .= " AND rl.fecha BETWEEN ? AND ?";
+                $typesRegistros .= "ss";
+                $paramsRegistros[] = $desde;
+                $paramsRegistros[] = $hasta;
+            }
+            $sqlRegistros .= " ORDER BY rl.fecha DESC";
+            $query = db_result($con, $sqlRegistros, $typesRegistros, $paramsRegistros);
             ?>
 
             <table>
@@ -290,7 +226,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
                                 <div class="cow-avatar">
                                     <?php echo strtoupper(substr($row['vaca'], 0, 1)); ?>
                                 </div>
-                                <span class="cow-name"><?php echo $row['vaca']; ?></span>
+                                <span class="cow-name"><?php echo e($row['vaca']); ?></span>
                             </div>
                         </td>
                         <td>
@@ -309,19 +245,22 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Historial
                                 </a>
-                                <a href="eliminarl.php?id=<?php echo $row['id']; ?>"
-                                   class="btn-icon-del"
-                                   onclick="return confirm('¿Eliminar este registro de <?php echo $row['vaca']; ?>?')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                                    Eliminar
-                                </a>
+                                <form method="POST" action="eliminarl.php" style="display:inline"
+                                      onsubmit="return confirm('¿Eliminar este registro de produccion?')">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                    <button type="submit" class="btn-icon-del">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                        Eliminar
+                                    </button>
+                                </form>
                                 <!-- ✅ Ahora abre modal en lugar de ir a editar.php -->
                                 <button type="button" class="btn-icon-edit"
                                     onclick="abrirModalEditar(
-                                        <?php echo $row['id']; ?>,
-                                        '<?php echo addslashes($row['vaca']); ?>',
-                                        '<?php echo $row['fecha']; ?>',
-                                        '<?php echo $row['litros']; ?>'
+                                        <?php echo (int)$row['id']; ?>,
+                                        <?php echo json_encode($row['vaca']); ?>,
+                                        <?php echo json_encode($row['fecha']); ?>,
+                                        <?php echo json_encode((string)$row['litros']); ?>
                                     )">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
                                     Editar
@@ -360,6 +299,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
         <div class="modal-divider"></div>
 
         <form action="CrearL.php" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="modal-body">
                 <div class="field">
                     <label class="field-label">
@@ -369,16 +309,16 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
                     <select name="vaca_id" required>
                         <option value="">Seleccione una vaca…</option>
                         <?php
-                        $vacas2 = mysqli_query($con, "SELECT * FROM vacas WHERE estado='produccion' AND usuario_id='$usuario_id' ORDER BY nombre ASC");
+                        $vacas2 = db_result($con, "SELECT * FROM vacas WHERE estado = 'produccion' AND usuario_id = ? ORDER BY nombre ASC", "i", [$usuario_id]);
                         while ($vac = mysqli_fetch_assoc($vacas2)):
                         ?>
                         <option value="<?php echo $vac['id']; ?>">
-                            <?php echo $vac['nombre']; ?>
+                            <?php echo e($vac['nombre']); ?>
                         </option>
                         <?php endwhile; ?>
                     </select>
                     <?php
-                    $countProd = mysqli_fetch_row(mysqli_query($con, "SELECT COUNT(*) FROM vacas WHERE estado='produccion' AND usuario_id='$usuario_id'"))[0];
+                    $countProd = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'produccion' AND usuario_id = ?", "i", [$usuario_id]) ?? 0);
                     if ($countProd == 0):
                     ?>
                     <div class="field-warning">
@@ -440,6 +380,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
 
         <!-- action apunta a tu archivo de actualización existente -->
         <form action="ActualizarL.php" method="POST">
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="id" id="editId">
 
             <div class="modal-body">
@@ -451,11 +392,11 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
                     <select name="vaca_id" id="editVacaId" required>
                         <option value="">Seleccione una vaca…</option>
                         <?php
-                        $vacas3 = mysqli_query($con, "SELECT * FROM vacas WHERE estado='produccion' AND usuario_id='$usuario_id' ORDER BY nombre ASC");
+                        $vacas3 = db_result($con, "SELECT * FROM vacas WHERE estado = 'produccion' AND usuario_id = ? ORDER BY nombre ASC", "i", [$usuario_id]);
                         while ($vac3 = mysqli_fetch_assoc($vacas3)):
                         ?>
                         <option value="<?php echo $vac3['id']; ?>">
-                            <?php echo $vac3['nombre']; ?>
+                            <?php echo e($vac3['nombre']); ?>
                         </option>
                         <?php endwhile; ?>
                     </select>
@@ -492,17 +433,23 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
 
 <?php
 /* ================= DATOS GRÁFICA ================= */
-$filtroGrafica = "WHERE rl.usuario_id = '$usuario_id'";
-if ($condicionFecha) $filtroGrafica .= " AND rl.fecha BETWEEN '$desde' AND '$hasta'";
-
-$grafica = mysqli_query($con, "
+$sqlGrafica = "
     SELECT v.nombre, SUM(rl.litros) as total
     FROM registroleche rl
     INNER JOIN vacas v ON rl.vaca_id = v.id
-    $filtroGrafica
+    WHERE rl.usuario_id = ?";
+$typesGrafica = "i";
+$paramsGrafica = [$usuario_id];
+if ($filtrarFecha) {
+    $sqlGrafica .= " AND rl.fecha BETWEEN ? AND ?";
+    $typesGrafica .= "ss";
+    $paramsGrafica[] = $desde;
+    $paramsGrafica[] = $hasta;
+}
+$sqlGrafica .= "
     GROUP BY v.nombre
-    ORDER BY total DESC
-");
+    ORDER BY total DESC";
+$grafica = db_result($con, $sqlGrafica, $typesGrafica, $paramsGrafica);
 
 $gNombres = [];
 $gLitros  = [];

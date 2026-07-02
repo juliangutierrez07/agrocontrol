@@ -1,81 +1,48 @@
 <?php
-session_start();
-
-if(!isset($_SESSION['id'])){
-    header("Location: ../login.php");
-    exit();
-}
-
-include("../Config/conexion.php");
+require_once("../Config/conexion.php");
+require_login();
 $con = conexion();
 
-$usuario_id = $_SESSION['id'];
+$usuario_id = current_user_id();
 
 // ── PROCESAR EDICIÓN ──
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_id'])) {
-    $id           = $_POST['editar_id'];
-    $nombre       = mysqli_real_escape_string($con, $_POST['nombre']);
-    $raza         = mysqli_real_escape_string($con, $_POST['raza']);
-    $edad         = $_POST['edad'];
-    $estado       = mysqli_real_escape_string($con, $_POST['estado']);
-    $descripcion  = mysqli_real_escape_string($con, $_POST['descripcion']);
-    $vacunas_info = mysqli_real_escape_string($con, $_POST['vacunas_info']);
-    $partos       = ($_POST['partos'] ?? '') !== '' ? (int) $_POST['partos'] : 0;
-    $fotoUpdate   = '';
-    $fotoAnterior = null;
-    $fotoNuevaFisica = null;
-
-    $fotoActualQuery = mysqli_query($con, "SELECT foto FROM vacas WHERE id = '$id' AND usuario_id='$usuario_id' LIMIT 1");
-    if ($fotoActualQuery && mysqli_num_rows($fotoActualQuery) > 0) {
-        $fotoActualRow = mysqli_fetch_assoc($fotoActualQuery);
-        $fotoAnterior = $fotoActualRow['foto'] ?? null;
-    }
-
-    if (isset($_FILES['editar_foto']) && ($_FILES['editar_foto']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-        if ($_FILES['editar_foto']['error'] === UPLOAD_ERR_OK) {
-            $permitidos = [
-                'image/jpeg' => 'jpg',
-                'image/png'  => 'png',
-                'image/webp' => 'webp',
-                'image/avif' => 'avif'
-            ];
-            $mime = mime_content_type($_FILES['editar_foto']['tmp_name']);
-
-            if (isset($permitidos[$mime])) {
-                $directorioFisico = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Assets' . DIRECTORY_SEPARATOR . 'Imagenes' . DIRECTORY_SEPARATOR . 'vacas';
-                if (!is_dir($directorioFisico)) {
-                    mkdir($directorioFisico, 0777, true);
-                }
-
-                $nombreArchivo = 'vaca_' . $usuario_id . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $permitidos[$mime];
-                $rutaFisica = $directorioFisico . DIRECTORY_SEPARATOR . $nombreArchivo;
-
-                if (move_uploaded_file($_FILES['editar_foto']['tmp_name'], $rutaFisica)) {
-                    $fotoRuta = mysqli_real_escape_string($con, '../Assets/Imagenes/vacas/' . $nombreArchivo);
-                    $fotoUpdate = ", foto='$fotoRuta'";
-                    $fotoNuevaFisica = $rutaFisica;
-                }
-            }
+    try {
+        require_csrf();
+        $id           = input_int($_POST, 'editar_id', 1);
+        $nombre       = input_string($_POST, 'nombre', 100);
+        $raza         = input_string($_POST, 'raza', 100, false);
+        $edad         = input_int($_POST, 'edad', 0, 40, false);
+        $estadosPermitidos = ['produccion', 'secado', 'enrazada'];
+        $estado       = input_string($_POST, 'estado', 40);
+        if (!in_array($estado, $estadosPermitidos, true)) {
+            throw new InvalidArgumentException('Estado de vaca no válido.');
         }
-    }
+        $descripcion  = input_string($_POST, 'descripcion', 1000, false);
+        $vacunas_info = input_string($_POST, 'vacunas_info', 1000, false);
+        $partos       = input_int($_POST, 'partos', 0, 30, false);
 
-    $sql_update = "UPDATE vacas 
-                   SET nombre='$nombre', raza='$raza', edad='$edad', estado='$estado',
-                       descripcion='$descripcion', vacunas_info='$vacunas_info', partos='$partos'
-                       $fotoUpdate
-                   WHERE id = '$id' AND usuario_id='$usuario_id'";
+        $fotoAnterior = db_value($con, "SELECT foto FROM vacas WHERE id = ? AND usuario_id = ? LIMIT 1", "ii", [$id, $usuario_id]);
+        $fotoUpdate = isset($_FILES['editar_foto']) ? save_uploaded_image($_FILES['editar_foto'], $usuario_id, 'foto') : null;
 
-    $updateOk = mysqli_query($con, $sql_update);
-
-    if ($updateOk && $fotoNuevaFisica && !empty($fotoAnterior)) {
-        $baseDir = realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Assets' . DIRECTORY_SEPARATOR . 'Imagenes' . DIRECTORY_SEPARATOR . 'vacas');
-        $fotoAnteriorRel = str_replace(['../Assets/Imagenes/vacas/', '..\\Assets\\Imagenes\\vacas\\'], '', $fotoAnterior);
-        $fotoAnteriorPath = $baseDir . DIRECTORY_SEPARATOR . basename($fotoAnteriorRel);
-        $fotoAnteriorReal = file_exists($fotoAnteriorPath) ? realpath($fotoAnteriorPath) : false;
-
-        if ($baseDir && $fotoAnteriorReal && strpos($fotoAnteriorReal, $baseDir) === 0 && is_file($fotoAnteriorReal)) {
-            @unlink($fotoAnteriorReal);
+        if ($fotoUpdate) {
+            db_execute(
+                $con,
+                "UPDATE vacas SET nombre = ?, raza = ?, edad = ?, estado = ?, foto = ?, descripcion = ?, vacunas_info = ?, partos = ? WHERE id = ? AND usuario_id = ?",
+                "ssissssiii",
+                [$nombre, $raza, $edad, $estado, $fotoUpdate, $descripcion, $vacunas_info, $partos, $id, $usuario_id]
+            );
+            delete_cow_image($fotoAnterior);
+        } else {
+            db_execute(
+                $con,
+                "UPDATE vacas SET nombre = ?, raza = ?, edad = ?, estado = ?, descripcion = ?, vacunas_info = ?, partos = ? WHERE id = ? AND usuario_id = ?",
+                "ssisssiii",
+                [$nombre, $raza, $edad, $estado, $descripcion, $vacunas_info, $partos, $id, $usuario_id]
+            );
         }
+    } catch (Throwable $e) {
+        app_log($e->getMessage());
     }
 
     header('Location: Registro_Vacas.php');
@@ -89,66 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroControl | Registro De Vacas</title>
-    <link rel="stylesheet" href="../Css/registro_vacas.css">
+    <link rel="stylesheet" href="../Css/layout-base.css">
+    <link rel="stylesheet" href="../Css/Dashboard.css">
+    <link rel="stylesheet" href="../Css/registro_vacas.css?v=20260702">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 
 </head>
 
 <body>
-    <aside>
-        <div class="sidebar">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#061006" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2C6 2 3 7 3 12s3 10 9 10 9-5 9-10S18 2 12 2"/>
-                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                        <circle cx="9" cy="9" r=".8" fill="#061006"/>
-                        <circle cx="15" cy="9" r=".8" fill="#061006"/>
-                    </svg>
-                </div>
-                <div class="logo-text">
-                    <div class="logo-name">AGRO<span>CONTROL</span></div>
-                    <div class="logo-sub">Gestión Ganadera</div>
-                </div>
-            </div>
-
-            <div class="nav-section">
-                <div class="menu-label">Principal</div>
-                <div class="menu">
-                    <a href="Dashboard.php">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-                        Dashboard
-                    </a>
-                    <a href="#" class="active">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="8" rx="7" ry="5"/><path d="M5 13c0 3.3 3.1 6 7 6s7-2.7 7-6"/></svg>
-                        Gestión de Vacas
-                    </a>
-                    <a href="produccion_lechera.php">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-                        Producción Lechera
-                    </a>
-                    <a href="potrero.php">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                        Potreros y Mangas
-                    </a>
-                    <a href="vacunaciones.html">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 3l2 2-7 7"/><path d="M17 5l2 2"/><path d="M3 21l9-9"/><path d="M14.5 5.5l-11 11 4 4 11-11z"/></svg>
-                        Vacunaciones
-                    </a>
-                </div>
-            </div>
-            <div class="nav-divider"></div>
-            <div class="nav-section">
-                <div class="menu-label">Sistema</div>
-                <div class="menu">
-                    <a href="logout.php" class="logout-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Cerrar sesión
-                    </a>
-                </div>
-            </div>
-        </div>
-    </aside>
+    <?php include 'sidebar.php'; ?>
     <div class="main">
         <div class="topbar">
             <div class="topbar-left">
@@ -168,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_id'])) {
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
+                <div class="topbar-separator"></div>
                 <button type="button" class="btn-primary" onclick="abrirModal()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Registrar vaca
@@ -176,17 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_id'])) {
         </div>
         <div class="stats-grid">
             <?php
-$total = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) FROM vacas WHERE usuario_id='$usuario_id'"))[0];
-
-$prod = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) FROM vacas WHERE estado='produccion' AND usuario_id='$usuario_id'"))[0];
-
-$secado = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) FROM vacas WHERE estado='secado' AND usuario_id='$usuario_id'"))[0];
-
-$enrazada = mysqli_fetch_row(mysqli_query($con, 
-"SELECT COUNT(*) FROM vacas WHERE estado='enrazada' AND usuario_id='$usuario_id'"))[0];
+$total = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE usuario_id = ?", "i", [$usuario_id]) ?? 0);
+$prod = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'produccion' AND usuario_id = ?", "i", [$usuario_id]) ?? 0);
+$secado = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'secado' AND usuario_id = ?", "i", [$usuario_id]) ?? 0);
+$enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enrazada' AND usuario_id = ?", "i", [$usuario_id]) ?? 0);
 ?>
             <div class="stat-card">
                 <div class="stat-top">
@@ -232,12 +142,7 @@ $enrazada = mysqli_fetch_row(mysqli_query($con,
 
         <!-- TABLA -->
         <?php
-            $condicion = "";
-
-if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
-    $busqueda  = $_GET['busqueda'];
-    $condicion = "AND (nombre LIKE '%$busqueda%' OR codigo LIKE '%$busqueda%')";
-}
+            $busqueda = input_string($_GET, 'busqueda', 100, false);
         ?>
         <div class="contenedorTabla">
             <div class="table-toolbar">
@@ -250,9 +155,12 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
             </div>
 
             <?php
-                $sql = "SELECT * FROM vacas 
-        WHERE usuario_id='$usuario_id' $condicion";
-                $query = mysqli_query($con, $sql);
+                if ($busqueda !== '') {
+                    $like = '%' . $busqueda . '%';
+                    $query = db_result($con, "SELECT * FROM vacas WHERE usuario_id = ? AND (nombre LIKE ? OR codigo LIKE ? OR raza LIKE ?) ORDER BY nombre ASC", "isss", [$usuario_id, $like, $like, $like]);
+                } else {
+                    $query = db_result($con, "SELECT * FROM vacas WHERE usuario_id = ? ORDER BY nombre ASC", "i", [$usuario_id]);
+                }
             ?>
 
             <div class="table-scroll">
@@ -268,19 +176,23 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = mysqli_fetch_array($query)): ?>
+                    <?php
+                    $hayRegistros = false;
+                    while ($row = mysqli_fetch_array($query)):
+                        $hayRegistros = true;
+                    ?>
                     <tr>
-                        <td><span class="code-tag">#<?php echo $row['codigo']; ?></span></td>
+                        <td><span class="code-tag">#<?php echo e($row['codigo']); ?></span></td>
                         <td>
                             <div class="cow-cell">
                                 <div class="cow-avatar av-<?php echo strtolower(substr($row['nombre'], 0, 1)); ?>">
                                     <?php echo strtoupper(substr($row['nombre'], 0, 1)); ?>
                                 </div>
-                                <span class="cow-name"><?php echo $row['nombre']; ?></span>
+                                <span class="cow-name"><?php echo e($row['nombre']); ?></span>
                             </div>
                         </td>
-                        <td class="td-raza"><?php echo $row['raza']; ?></td>
-                        <td class="td-edad"><?php echo $row['edad'] ? $row['edad'].' años' : '—'; ?></td>
+                        <td class="td-raza"><?php echo e($row['raza']); ?></td>
+                        <td class="td-edad"><?php echo $row['edad'] ? (int)$row['edad'].' años' : '—'; ?></td>
                         <td>
                             <?php
                                 $estado = $row['estado'];
@@ -290,7 +202,7 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
                                 if ($estado === 'secado')      { $badgeClass = 's-sec';  $badgeLabel = 'Secado'; }
                                 if ($estado === 'enrazada')    { $badgeClass = 's-enr';  $badgeLabel = 'Enrazada'; }
                             ?>
-                            <span class="status-badge <?php echo $badgeClass; ?>"><?php echo $badgeLabel; ?></span>
+                            <span class="status-badge <?php echo e($badgeClass); ?>"><?php echo e($badgeLabel); ?></span>
                         </td>
                         <td>
                             <div class="actions-cell">
@@ -299,24 +211,27 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Historial
                                 </a>
-                                <a href="eliminar.php?id=<?php echo $row['id']; ?>"
-                                   class="btn-icon-del"
-                                   onclick="return confirm('¿Seguro que deseas eliminar a <?php echo $row['nombre']; ?>? Esta acción no se puede deshacer.')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                                    Eliminar
-                                </a>
+                                <form method="POST" action="eliminar.php" style="display:inline"
+                                      onsubmit="return confirm('¿Seguro que deseas eliminar esta vaca? Esta acción no se puede deshacer.')">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                    <button type="submit" class="btn-icon-del">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                        Eliminar
+                                    </button>
+                                </form>
                                 <!-- ── BOTÓN EDITAR → abre modal ── -->
                                 <button type="button" class="btn-icon-edit"
                                     onclick="abrirModalEditar(
-                                        '<?php echo $row['id']; ?>',
-                                        '<?php echo addslashes($row['nombre']); ?>',
-                                        '<?php echo addslashes($row['raza']); ?>',
-                                        '<?php echo $row['edad']; ?>',
-                                        '<?php echo $row['estado']; ?>',
-                                        '<?php echo addslashes($row['descripcion'] ?? ''); ?>',
-                                        '<?php echo addslashes($row['vacunas_info'] ?? ''); ?>',
-                                        '<?php echo (int) ($row['partos'] ?? 0); ?>',
-                                        '<?php echo addslashes($row['foto'] ?? ''); ?>'
+                                        <?php echo (int)$row['id']; ?>,
+                                        <?php echo json_encode($row['nombre']); ?>,
+                                        <?php echo json_encode($row['raza']); ?>,
+                                        <?php echo (int)$row['edad']; ?>,
+                                        <?php echo json_encode($row['estado']); ?>,
+                                        <?php echo json_encode($row['descripcion'] ?? ''); ?>,
+                                        <?php echo json_encode($row['vacunas_info'] ?? ''); ?>,
+                                        <?php echo (int) ($row['partos'] ?? 0); ?>,
+                                        <?php echo json_encode($row['foto'] ?? ''); ?>
                                     )">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
                                     Editar
@@ -327,6 +242,22 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
                     <?php endwhile; ?>
                 </tbody>
                 </table>
+                <?php if (!$hayRegistros): ?>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="12" cy="8" rx="7" ry="5"/><path d="M5 13c0 3.3 3.1 6 7 6s7-2.7 7-6"/></svg>
+                    </div>
+                    <div class="empty-state-title">
+                        <?php echo ($busqueda !== '') ? 'Sin resultados para "' . htmlspecialchars($busqueda) . '"' : 'No hay vacas registradas'; ?>
+                    </div>
+                    <div class="empty-state-desc">
+                        <?php echo ($busqueda !== '') ? 'Prueba con otro nombre, código o raza.' : 'Registra tu primer animal usando el botón "Registrar vaca" en la parte superior.'; ?>
+                    </div>
+                    <?php if ($busqueda !== ''): ?>
+                    <a href="Registro_Vacas.php" style="font-size:12px;color:var(--accent-text);text-decoration:none;margin-top:4px;">Ver todas las vacas</a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -354,6 +285,7 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
             <div class="modal-divider"></div>
 
             <form action="CrearV.php" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="field-row-2">
                         <div class="field">
@@ -469,6 +401,7 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
             <div class="modal-divider"></div>
 
             <form method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="editar_id" id="editar_id">
 
                 <div class="modal-body">
@@ -553,6 +486,8 @@ if (isset($_GET['busqueda']) && $_GET['busqueda'] !== "") {
     </div>
 
     <script src="../JS/registro_vacas.js"></script>
+
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- ── JS MODAL EDITAR ── -->
     <script>

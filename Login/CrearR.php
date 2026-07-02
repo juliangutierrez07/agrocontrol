@@ -1,24 +1,46 @@
 <?php
-include("../Config/conexion.php");
+require_once("../Config/conexion.php");
+// Solo administradores pueden crear nuevas cuentas.
+// require_role llama internamente a require_login, que llama a start_secure_session.
+require_role(['administrador']);
 $con = conexion();
-if(isset($_POST['nombre']) && isset($_POST['correo']) && isset($_POST['password'])){
-    if($_POST['nombre'] !== '' && $_POST['correo'] !== '' && $_POST['password'] !== ''){
-        $nombre = mysqli_real_escape_string($con, trim($_POST['nombre']));
-        $correo = mysqli_real_escape_string($con, trim($_POST['correo']));
-        $password = mysqli_real_escape_string($con, trim($_POST['password']));
 
-        $validarCorreo = "SELECT id FROM usuarios WHERE correo = '$correo' LIMIT 1";
-        $resultadoCorreo = mysqli_query($con, $validarCorreo);
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    try {
+        require_csrf();
+        $nombre   = input_string($_POST, 'nombre', 100);
+        $correo   = input_email($_POST, 'correo', 255);
+        $password = input_string($_POST, 'password', 255);
 
-        if($resultadoCorreo && mysqli_num_rows($resultadoCorreo) > 0){
+        if (strlen($password) < 8) {
+            header("Location: administrador.php?registro=password_debil");
+            exit();
+        }
+
+        $existe = db_value($con, "SELECT id FROM usuarios WHERE correo = ? LIMIT 1", "s", [$correo]);
+        if ($existe) {
             header("Location: administrador.php?registro=correo_existente");
             exit();
         }
 
-        $sql = "INSERT INTO usuarios (nombre,correo,password) VALUES ('$nombre','$correo','$password')";
-        mysqli_query($con,$sql);
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        db_execute(
+            $con,
+            "INSERT INTO usuarios (nombre, correo, password) VALUES (?, ?, ?)",
+            "sss",
+            [$nombre, $correo, $hash]
+        );
+
+        app_log('[ADMIN] Usuario creado: ' . $correo . ' por admin ID ' . current_user_id());
         header("Location: administrador.php?registro=ok");
+        exit();
+    } catch (Throwable $e) {
+        app_log($e->getMessage());
+        header("Location: administrador.php?registro=error");
         exit();
     }
 }
+
+header("Location: administrador.php");
+exit();
 ?>

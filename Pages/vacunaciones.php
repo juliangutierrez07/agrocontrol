@@ -1,199 +1,171 @@
 <?php
-session_start();
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
-
-$conn = new mysqli('localhost', 'root', '', 'agrocontrol');
-if ($conn->connect_error) {
-    die(json_encode(['error' => 'Conexión fallida: ' . $conn->connect_error]));
-}
-$conn->set_charset('utf8');
-
-// Obtener usuario_id de la sesión
-$usuario_id = (int)($_SESSION['id'] ?? 0);
-if (!$usuario_id) {
-    echo json_encode(['error' => 'No autenticado']);
-    exit;
-}
-
+require_once("../Config/conexion.php");
+require_login();
+$conn = conexion();
+$usuarioId = current_user_id();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
-// Marcar como vencidas automáticamente al entrar (solo las del usuario)
-$conn->query("
-    UPDATE vacunaciones 
-    SET estado = 'vencida' 
-    WHERE estado = 'pendiente' 
-    AND fecha_programada < CURDATE()
-    AND vaca_id IN (SELECT id FROM vacas WHERE usuario_id = $usuario_id)
-");
-
-// ── GET ─────────────────────────────────────────────
-if ($method === 'GET') {
-
-    // Listar todas las vacunaciones del usuario
-    if ($action === 'listar') {
-        $vaca_id = isset($_GET['vaca_id']) ? (int)$_GET['vaca_id'] : null;
-        $extra   = $vaca_id ? "AND va.vaca_id = $vaca_id" : '';
-        $sql = "
-            SELECT va.*, 
-                   v.nombre AS nombre_vaca, v.codigo AS codigo_vaca,
-                   tv.nombre AS tipo_vacuna, tv.obligatoria_ica,
-                   DATEDIFF(va.fecha_programada, CURDATE()) AS dias_restantes
-            FROM vacunaciones va
-            JOIN vacas v ON v.id = va.vaca_id
-            JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
-            WHERE v.usuario_id = $usuario_id $extra
-            ORDER BY va.fecha_programada ASC
-        ";
-        $res  = $conn->query($sql);
-        $data = [];
-        while ($row = $res->fetch_assoc()) $data[] = $row;
-        echo json_encode($data);
+try {
+    if ($action === 'csrf') {
+        json_response(['csrf_token' => csrf_token()]);
     }
 
-    // Alertas: vacunas en los próximos 7 días del usuario
-    elseif ($action === 'alertas') {
-        $sql = "
-            SELECT va.*, v.nombre AS nombre_vaca, tv.nombre AS tipo_vacuna,
-                   DATEDIFF(va.fecha_programada, CURDATE()) AS dias_restantes
-            FROM vacunaciones va
-            JOIN vacas v ON v.id = va.vaca_id
-            JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
-            WHERE v.usuario_id = $usuario_id
-            AND va.estado = 'pendiente'
-            AND va.fecha_programada BETWEEN CURDATE() 
-                AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-            ORDER BY va.fecha_programada ASC
-        ";
-        $res  = $conn->query($sql);
-        $data = [];
-        while ($row = $res->fetch_assoc()) $data[] = $row;
-        echo json_encode($data);
+    if ($method !== 'GET') {
+        require_csrf();
     }
 
-    // Tipos de vacuna para el select
-    elseif ($action === 'tipos') {
-        $res  = $conn->query("SELECT * FROM tipos_vacuna ORDER BY nombre");
+    db_execute(
+        $conn,
+        "UPDATE vacunaciones
+         SET estado = 'vencida'
+         WHERE estado = 'pendiente'
+           AND fecha_programada < CURDATE()
+           AND vaca_id IN (SELECT id FROM vacas WHERE usuario_id = ?)",
+        "i",
+        [$usuarioId]
+    );
+
+    if ($method === 'GET') {
+        if ($action === 'listar') {
+            $vacaId = isset($_GET['vaca_id']) && $_GET['vaca_id'] !== '' ? input_int($_GET, 'vaca_id', 1) : null;
+            $sql = "SELECT va.*, v.nombre AS nombre_vaca, v.codigo AS codigo_vaca,
+                           tv.nombre AS tipo_vacuna, tv.obligatoria_ica,
+                           DATEDIFF(va.fecha_programada, CURDATE()) AS dias_restantes
+                    FROM vacunaciones va
+                    JOIN vacas v ON v.id = va.vaca_id
+                    JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
+                    WHERE v.usuario_id = ?";
+            $types = "i";
+            $params = [$usuarioId];
+            if ($vacaId) {
+                $sql .= " AND va.vaca_id = ?";
+                $types .= "i";
+                $params[] = $vacaId;
+            }
+            $sql .= " ORDER BY va.fecha_programada ASC";
+            $res = db_result($conn, $sql, $types, $params);
+        } elseif ($action === 'alertas') {
+            $res = db_result(
+                $conn,
+                "SELECT va.*, v.nombre AS nombre_vaca, tv.nombre AS tipo_vacuna,
+                        DATEDIFF(va.fecha_programada, CURDATE()) AS dias_restantes
+                 FROM vacunaciones va
+                 JOIN vacas v ON v.id = va.vaca_id
+                 JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
+                 WHERE v.usuario_id = ?
+                   AND va.estado = 'pendiente'
+                   AND va.fecha_programada BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                 ORDER BY va.fecha_programada ASC",
+                "i",
+                [$usuarioId]
+            );
+        } elseif ($action === 'tipos') {
+            $res = db_result($conn, "SELECT * FROM tipos_vacuna ORDER BY nombre");
+        } elseif ($action === 'vacas') {
+            $res = db_result($conn, "SELECT id, codigo, nombre FROM vacas WHERE usuario_id = ? ORDER BY nombre", "i", [$usuarioId]);
+        } elseif ($action === 'resumen') {
+            $res = db_result(
+                $conn,
+                "SELECT tv.nombre AS tipo_vacuna, tv.obligatoria_ica,
+                        COUNT(CASE WHEN va.estado='aplicada' THEN 1 END) AS aplicadas,
+                        COUNT(CASE WHEN va.estado='pendiente' THEN 1 END) AS pendientes,
+                        COUNT(CASE WHEN va.estado='vencida' THEN 1 END) AS vencidas
+                 FROM vacunaciones va
+                 JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
+                 JOIN vacas v ON v.id = va.vaca_id
+                 WHERE v.usuario_id = ?
+                 GROUP BY tv.id, tv.nombre, tv.obligatoria_ica
+                 ORDER BY tv.obligatoria_ica DESC, tv.nombre",
+                "i",
+                [$usuarioId]
+            );
+        } else {
+            json_response(['error' => 'Accion no valida'], 400);
+        }
+
         $data = [];
-        while ($row = $res->fetch_assoc()) $data[] = $row;
-        echo json_encode($data);
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = array_map(fn($value) => is_string($value) ? htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : $value, $row);
+        }
+        json_response($data);
     }
 
-    // Lista de vacas del usuario para el select
-    elseif ($action === 'vacas') {
-        $res  = $conn->query("SELECT id, codigo, nombre FROM vacas WHERE usuario_id = $usuario_id ORDER BY nombre");
-        $data = [];
-        while ($row = $res->fetch_assoc()) $data[] = $row;
-        echo json_encode($data);
-    }
-
-    // Resumen para reporte ICA (solo del usuario)
-    elseif ($action === 'resumen') {
-        $sql = "
-            SELECT 
-                tv.nombre AS tipo_vacuna,
-                tv.obligatoria_ica,
-                COUNT(CASE WHEN va.estado='aplicada'  THEN 1 END) AS aplicadas,
-                COUNT(CASE WHEN va.estado='pendiente' THEN 1 END) AS pendientes,
-                COUNT(CASE WHEN va.estado='vencida'   THEN 1 END) AS vencidas
-            FROM vacunaciones va
-            JOIN tipos_vacuna tv ON tv.id = va.tipo_vacuna_id
-            JOIN vacas v ON v.id = va.vaca_id
-            WHERE v.usuario_id = $usuario_id
-            GROUP BY tv.id, tv.nombre, tv.obligatoria_ica
-            ORDER BY tv.obligatoria_ica DESC, tv.nombre
-        ";
-        $res  = $conn->query($sql);
-        $data = [];
-        while ($row = $res->fetch_assoc()) $data[] = $row;
-        echo json_encode($data);
-    }
-}
-
-// ── POST: crear vacunación ───────────────────────────
-elseif ($method === 'POST') {
     $body = json_decode(file_get_contents('php://input'), true);
-
-    $vaca_id        = (int)$body['vaca_id'];
-    $tipo_vacuna_id = (int)$body['tipo_vacuna_id'];
-    $fecha          = $conn->real_escape_string($body['fecha_programada']);
-    $dosis          = !empty($body['dosis_ml']) ? (float)$body['dosis_ml'] : null;
-    $responsable    = $conn->real_escape_string($body['responsable'] ?? '');
-    $obs            = $conn->real_escape_string($body['observaciones'] ?? '');
-    $dosis_sql      = $dosis ? $dosis : 'NULL';
-
-    // Verificar que la vaca pertenece al usuario
-    $checkVaca = $conn->query("SELECT id FROM vacas WHERE id = $vaca_id AND usuario_id = $usuario_id LIMIT 1");
-    if ($checkVaca->num_rows === 0) {
-        echo json_encode(['error' => 'Vaca no válida']);
-        exit;
+    if (!is_array($body)) {
+        json_response(['error' => 'JSON no valido'], 400);
     }
 
-    $sql = "
-        INSERT INTO vacunaciones 
-            (vaca_id, tipo_vacuna_id, fecha_programada, dosis_ml, responsable, observaciones)
-        VALUES 
-            ($vaca_id, $tipo_vacuna_id, '$fecha', $dosis_sql, '$responsable', '$obs')
-    ";
-    if ($conn->query($sql)) {
-        echo json_encode(['success' => true, 'id' => $conn->insert_id]);
-    } else {
-        echo json_encode(['error' => $conn->error]);
+    if ($method === 'POST') {
+        $vacaId = input_int($body, 'vaca_id', 1);
+        $tipoVacunaId = input_int($body, 'tipo_vacuna_id', 1);
+        $fecha = input_date($body, 'fecha_programada');
+        $dosis = !empty($body['dosis_ml']) ? input_float($body, 'dosis_ml', 0, 10000) : null;
+        $responsable = input_string($body, 'responsable', 100, false);
+        $observaciones = input_string($body, 'observaciones', 500, false);
+
+        $vacaValida = db_value($conn, "SELECT id FROM vacas WHERE id = ? AND usuario_id = ? LIMIT 1", "ii", [$vacaId, $usuarioId]);
+        if (!$vacaValida) {
+            json_response(['error' => 'Vaca no valida'], 400);
+        }
+
+        db_execute(
+            $conn,
+            "INSERT INTO vacunaciones (vaca_id, tipo_vacuna_id, fecha_programada, dosis_ml, responsable, observaciones)
+             VALUES (?, ?, ?, ?, ?, ?)",
+            "iisdss",
+            [$vacaId, $tipoVacunaId, $fecha, $dosis, $responsable, $observaciones]
+        );
+        json_response(['success' => true, 'id' => mysqli_insert_id($conn)]);
     }
+
+    if ($method === 'PUT') {
+        $id = input_int($body, 'id', 1);
+        $fechaAplicada = input_date($body, 'fecha_aplicada');
+        $dosis = !empty($body['dosis_ml']) ? input_float($body, 'dosis_ml', 0, 10000) : null;
+        $responsable = input_string($body, 'responsable', 100, false);
+        $observaciones = input_string($body, 'observaciones', 500, false);
+
+        $registroValido = db_value(
+            $conn,
+            "SELECT va.id FROM vacunaciones va JOIN vacas v ON v.id = va.vaca_id WHERE va.id = ? AND v.usuario_id = ? LIMIT 1",
+            "ii",
+            [$id, $usuarioId]
+        );
+        if (!$registroValido) {
+            json_response(['error' => 'Registro no valido'], 400);
+        }
+
+        db_execute(
+            $conn,
+            "UPDATE vacunaciones
+             SET estado = 'aplicada', fecha_aplicada = ?, dosis_ml = ?, responsable = ?, observaciones = ?
+             WHERE id = ?",
+            "sdssi",
+            [$fechaAplicada, $dosis, $responsable, $observaciones, $id]
+        );
+        json_response(['success' => true]);
+    }
+
+    if ($method === 'DELETE') {
+        $id = input_int($_GET, 'id', 1);
+        $registroValido = db_value(
+            $conn,
+            "SELECT va.id FROM vacunaciones va JOIN vacas v ON v.id = va.vaca_id WHERE va.id = ? AND v.usuario_id = ? LIMIT 1",
+            "ii",
+            [$id, $usuarioId]
+        );
+        if (!$registroValido) {
+            json_response(['error' => 'Registro no valido'], 400);
+        }
+
+        db_execute($conn, "DELETE FROM vacunaciones WHERE id = ?", "i", [$id]);
+        json_response(['success' => true]);
+    }
+
+    json_response(['error' => 'Metodo no permitido'], 405);
+} catch (Throwable $e) {
+    app_log($e->getMessage());
+    json_response(['error' => 'No fue posible procesar la solicitud'], 500);
 }
-
-// ── PUT: marcar como aplicada ────────────────────────
-elseif ($method === 'PUT') {
-    $body          = json_decode(file_get_contents('php://input'), true);
-    $id            = (int)$body['id'];
-    $fecha_aplicada = $conn->real_escape_string($body['fecha_aplicada']);
-    $dosis         = !empty($body['dosis_ml']) ? (float)$body['dosis_ml'] : null;
-    $responsable   = $conn->real_escape_string($body['responsable'] ?? '');
-    $obs           = $conn->real_escape_string($body['observaciones'] ?? '');
-    $dosis_sql     = $dosis ? $dosis : 'NULL';
-
-    // Verificar que la vacunación pertenece al usuario
-    $checkVac = $conn->query("SELECT va.id FROM vacunaciones va JOIN vacas v ON v.id = va.vaca_id WHERE va.id = $id AND v.usuario_id = $usuario_id LIMIT 1");
-    if ($checkVac->num_rows === 0) {
-        echo json_encode(['error' => 'Registro no válido']);
-        exit;
-    }
-
-    $sql = "
-        UPDATE vacunaciones SET
-            estado         = 'aplicada',
-            fecha_aplicada = '$fecha_aplicada',
-            dosis_ml       = $dosis_sql,
-            responsable    = '$responsable',
-            observaciones  = '$obs'
-        WHERE id = $id
-    ";
-    if ($conn->query($sql)) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['error' => $conn->error]);
-    }
-}
-
-elseif ($method === 'DELETE') {
-    $id = (int)$_GET['id'];
-
-    // Verificar que la vacunación pertenece al usuario antes de eliminar
-    $checkVac = $conn->query("SELECT va.id FROM vacunaciones va JOIN vacas v ON v.id = va.vaca_id WHERE va.id = $id AND v.usuario_id = $usuario_id LIMIT 1");
-    if ($checkVac->num_rows === 0) {
-        echo json_encode(['error' => 'Registro no válido']);
-        exit;
-    }
-
-    if ($conn->query("DELETE FROM vacunaciones WHERE id = $id")) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['error' => $conn->error]);
-    }
-}
-
-$conn->close();
 ?>

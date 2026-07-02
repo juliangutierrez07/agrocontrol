@@ -1,4 +1,8 @@
-<?php session_start(); ?>
+<?php
+require_once("../Config/conexion.php");
+require_login();
+$con = conexion();
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -9,695 +13,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-/* ═══════════════════════════════════════════════
-   AgroControl — potrero.css (inline)
-   ═══════════════════════════════════════════════ */
-
-/* ── TOKENS OSCURO ── */
-:root {
-  --bg-base:         #080B07;
-  --bg-surface:      #0F1410;
-  --bg-elevated:     #161C15;
-  --bg-card:         #1A2119;
-  --bg-hover:        #202820;
-  --bg-input:        #131812;
-  --border-hairline: rgba(255,255,255,0.045);
-  --border-subtle:   rgba(255,255,255,0.07);
-  --border-mid:      rgba(255,255,255,0.11);
-  --border-strong:   rgba(255,255,255,0.18);
-  --text-primary:    #DDE8D9;
-  --text-secondary:  #7A9474;
-  --text-tertiary:   #485644;
-  --text-muted:      #2E3B2C;
-  --accent:          #5BAF59;
-  --accent-bright:   #74C472;
-  --accent-dim:      rgba(91,175,89,0.18);
-  --accent-glow:     rgba(91,175,89,0.09);
-  --accent-text:     #A0D49E;
-  --accent-border:   rgba(91,175,89,0.22);
-  --danger:          #C9524F;
-  --danger-bright:   #E06866;
-  --danger-dim:      rgba(201,82,79,0.10);
-  --danger-text:     #EFA0A0;
-  --danger-border:   rgba(201,82,79,0.22);
-  --amber:           #C4883A;
-  --amber-dim:       rgba(196,136,58,0.10);
-  --amber-text:      #E8BC7A;
-  --amber-border:    rgba(196,136,58,0.22);
-  --blue:            #5190C8;
-  --blue-dim:        rgba(81,144,200,0.10);
-  --blue-text:       #94C0E8;
-  --blue-border:     rgba(81,144,200,0.22);
-  --r-xs:4px; --r-sm:7px; --r-md:10px; --r-lg:14px; --r-xl:18px;
-  --sidebar-w: 218px;
-  --font:  'Plus Jakarta Sans', sans-serif;
-  --mono:  'DM Mono', monospace;
-  --ease:  cubic-bezier(0.4,0,0.2,1);
-  --spring:cubic-bezier(0.34,1.56,0.64,1);
-}
-
-html.light {
-  --bg-base:         #F0F4EE;
-  --bg-surface:      #FFFFFF;
-  --bg-elevated:     #F5F8F3;
-  --bg-card:         #FFFFFF;
-  --bg-hover:        #EAF0E7;
-  --bg-input:        #F3F7F1;
-  --border-hairline: rgba(0,0,0,0.07);
-  --border-subtle:   rgba(0,0,0,0.09);
-  --border-mid:      rgba(0,0,0,0.13);
-  --border-strong:   rgba(0,0,0,0.20);
-  --text-primary:    #1A2418;
-  --text-secondary:  #3D6038;
-  --text-tertiary:   #6A8E65;
-  --text-muted:      #A4BCA0;
-  --accent:          #3D9C3A;
-  --accent-bright:   #52B84F;
-  --accent-dim:      rgba(61,156,58,0.12);
-  --accent-glow:     rgba(61,156,58,0.07);
-  --accent-text:     #1E5C1C;
-  --accent-border:   rgba(61,156,58,0.28);
-  --danger:          #C9524F;
-  --danger-dim:      rgba(201,82,79,0.08);
-  --danger-text:     #8B1F1C;
-  --danger-border:   rgba(201,82,79,0.22);
-  --amber:           #A06B1A;
-  --amber-dim:       rgba(160,107,26,0.08);
-  --amber-text:      #6B420A;
-  --amber-border:    rgba(160,107,26,0.24);
-  --blue:            #2E72B8;
-  --blue-dim:        rgba(46,114,184,0.08);
-  --blue-text:       #1A4E8A;
-  --blue-border:     rgba(46,114,184,0.24);
-}
-
-*, *::before, *::after {
-  box-sizing: border-box; margin: 0; padding: 0;
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: .22s; transition-timing-function: var(--ease);
-}
-a, button, .menu a, .theme-toggle, .btn-icon-edit,
-.btn-icon-del, .btn-modal-cancel, .btn-modal-submit { transition: all .15s var(--ease) !important; }
-
-html, body { height: 100%; }
-body {
-  font-family: var(--font);
-  background: var(--bg-base);
-  color: var(--text-primary);
-  font-size: 14px; line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  display: flex;
-}
-
-/* ══════════════════════════
-   SIDEBAR
-   ══════════════════════════ */
-aside {
-  width: var(--sidebar-w); height: 100vh;
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-hairline);
-  position: fixed; left: 0; top: 0;
-  display: flex; flex-direction: column; overflow: hidden;
-}
-aside::after {
-  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
-  background: linear-gradient(to bottom, transparent 0%, var(--border-subtle) 20%, var(--border-subtle) 80%, transparent 100%);
-  pointer-events: none;
-}
-.sidebar { display: flex; flex-direction: column; height: 100%; }
-.logo { padding: 18px 16px 16px; border-bottom: 1px solid var(--border-hairline); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(91,175,89,0.3), inset 0 1px 0 rgba(255,255,255,0.15); }
-.logo-icon svg { width: 14px; height: 14px; }
-.logo-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); display: block; }
-.logo-name span { color: var(--accent-text); }
-.logo-sub { font-size: 9.5px; color: var(--text-tertiary); letter-spacing: 0.6px; text-transform: uppercase; }
-.nav-section { padding: 12px 8px 4px; }
-.menu-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 1.3px; color: var(--text-muted); padding: 0 8px 7px; font-weight: 600; }
-.menu { display: flex; flex-direction: column; }
-.menu a { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: var(--r-sm); font-size: 12.5px; font-weight: 400; color: var(--text-tertiary); text-decoration: none; margin-bottom: 1px; position: relative; }
-.menu a:hover { background: var(--bg-hover); color: var(--text-secondary); }
-.menu a.active { background: var(--accent-dim); color: var(--accent-text); font-weight: 500; }
-.menu a.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 2px; background: var(--accent); border-radius: 0 2px 2px 0; }
-.menu a.logout-link:hover { color: var(--danger-text); background: var(--danger-dim); }
-.nav-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: .6; }
-.menu a.active .nav-icon { opacity: 1; }
-.nav-divider { height: 1px; background: var(--border-hairline); margin: 6px 8px; }
-
-/* ══════════════════════════
-   MAIN LAYOUT
-   ══════════════════════════ */
-.main {
-  margin-left: var(--sidebar-w);
-  width: calc(100% - var(--sidebar-w));
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  background: var(--bg-base);
-}
-
-/* TOPBAR */
-.topbar {
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-hairline);
-  padding: 11px 26px;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0; position: sticky; top: 0; z-index: 10;
-}
-.topbar-left { display: flex; flex-direction: column; gap: 1px; }
-.topbar-breadcrumb { font-size: 10.5px; color: var(--text-muted); }
-.topbar-breadcrumb span { color: var(--text-tertiary); }
-.topbar-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -.2px; }
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-
-.theme-toggle {
-  width: 32px; height: 32px; border-radius: var(--r-sm);
-  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-  color: var(--text-tertiary); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  position: relative; flex-shrink: 0;
-}
-.theme-toggle:hover { background: var(--bg-hover); color: var(--text-secondary); border-color: var(--border-mid); }
-.theme-toggle:active { transform: scale(.95); }
-.icon-moon, .icon-sun { width: 14px; height: 14px; position: absolute; transition: opacity .2s var(--ease), transform .25s var(--spring) !important; }
-html:not(.light) .icon-moon { opacity: 1; transform: scale(1) rotate(0deg); }
-html:not(.light) .icon-sun  { opacity: 0; transform: scale(.5) rotate(30deg); }
-html.light .icon-moon { opacity: 0; transform: scale(.5) rotate(-30deg); }
-html.light .icon-sun  { opacity: 1; transform: scale(1) rotate(0deg); }
-
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 14px; border-radius: var(--r-md);
-  background: var(--accent); border: 1px solid rgba(91,175,89,.45);
-  box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12);
-  color: #061006; font-family: var(--font); font-size: 12.5px; font-weight: 700;
-  cursor: pointer; white-space: nowrap; line-height: 1;
-}
-.btn-primary svg { width: 12px; height: 12px; }
-.btn-primary:hover { background: var(--accent-bright); }
-.btn-primary:active { transform: scale(.97); }
-
-/* ══════════════════════════
-   STATS GRID
-   ══════════════════════════ */
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4,1fr);
-  gap: 12px; padding: 22px 26px 0;
-}
-.stat-card {
-  background: var(--bg-card); border: 1px solid var(--border-hairline);
-  border-radius: var(--r-lg); padding: 15px 17px;
-  display: flex; flex-direction: column; gap: 10px;
-  position: relative; overflow: hidden;
-}
-.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--border-subtle), transparent); }
-.stat-card:hover { border-color: var(--border-subtle); }
-.stat-top { display: flex; align-items: center; justify-content: space-between; }
-.stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--text-tertiary); font-weight: 600; }
-.stat-icon { width: 22px; height: 22px; border-radius: var(--r-xs); display: flex; align-items: center; justify-content: center; }
-.si-green { background: var(--accent-dim); border: 1px solid var(--accent-border); }
-.si-blue  { background: var(--blue-dim);   border: 1px solid var(--blue-border); }
-.si-amber { background: var(--amber-dim);  border: 1px solid var(--amber-border); }
-.si-danger{ background: var(--danger-dim); border: 1px solid var(--danger-border); }
-.stat-icon svg { width: 11px; height: 11px; }
-.si-green svg { color: var(--accent-text); }
-.si-blue  svg { color: var(--blue-text); }
-.si-amber svg { color: var(--amber-text); }
-.si-danger svg { color: var(--danger-text); }
-.stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
-.stat-meta { font-size: 10.5px; color: var(--text-muted); }
-
-/* ══════════════════════════
-   TABLE CONTAINER
-   ══════════════════════════ */
-.contenedorTabla {
-  margin: 18px 26px 26px;
-  background: var(--bg-card); border: 1px solid var(--border-hairline);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  max-height: 420px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.contenedorTabla::-webkit-scrollbar { width: 3px; }
-.contenedorTabla::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
-
-.table-toolbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid var(--border-hairline);
-  position: sticky; top: 0; z-index: 3;
-  background: var(--bg-card);
-}
-.tt-left { display: flex; align-items: center; gap: 10px; }
-.table-heading { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
-.count-pill { font-size: 10.5px; font-weight: 500; background: var(--bg-elevated); color: var(--text-tertiary); border: 1px solid var(--border-hairline); padding: 2px 8px; border-radius: 20px; }
-
-table { width: 100%; border-collapse: collapse; background: transparent; }
-thead th { padding: 9px 16px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--text-muted); font-weight: 600; background: var(--bg-elevated); border-bottom: 1px solid var(--border-hairline); position: sticky; top: 0; z-index: 2; }
-thead th:last-child { text-align: right; }
-tbody tr { border-bottom: 1px solid var(--border-hairline); }
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,.015); }
-html.light tbody tr:hover { background: rgba(0,0,0,.015); }
-tbody td { padding: 11px 16px; vertical-align: middle; }
-tbody td:last-child { text-align: right; }
-
-.potrero-cell { display: flex; align-items: center; gap: 9px; }
-.potrero-avatar { width: 28px; height: 28px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; font-family: var(--mono); background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-text); flex-shrink: 0; }
-.potrero-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
-
-.mono-val { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
-.unit { font-size: 10.5px; font-weight: 400; color: var(--text-tertiary); margin-left: 2px; }
-.capacidad-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.capacidad-main,
-.capacidad-sub {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-}
-.capacidad-sub .mono-val {
-  font-size: 11px;
-  color: var(--blue-text);
-}
-.capacidad-sub .unit {
-  color: var(--text-muted);
-}
-
-.pasto-tag { font-size: 11.5px; color: var(--text-secondary); }
-.fecha-tag { font-family: var(--mono); font-size: 11.5px; color: var(--text-tertiary); }
-
-.badge-mangas { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--blue-dim); color: var(--blue-text); border: 1px solid var(--blue-border); }
-.badge-sin    { font-size: 10.5px; color: var(--text-muted); }
-
-.actions-cell { display: flex; gap: 5px; justify-content: flex-end; }
-.btn-icon-edit, .btn-icon-del {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 10px; border-radius: var(--r-xs);
-  font-family: var(--font); font-size: 11.5px; font-weight: 500;
-  text-decoration: none; cursor: pointer; border: 1px solid transparent; background: none;
-}
-.btn-icon-edit svg, .btn-icon-del svg { width: 11px; height: 11px; }
-.btn-icon-edit { background: var(--accent-glow); border-color: var(--accent-border); color: var(--accent-text); }
-.btn-icon-edit:hover { background: var(--accent-dim); border-color: rgba(91,175,89,.4); }
-.btn-icon-edit:active { transform: scale(.96); }
-.btn-icon-del { background: var(--danger-dim); border-color: var(--danger-border); color: var(--danger-text); }
-.btn-icon-del:hover { background: rgba(201,82,79,.16); border-color: rgba(224,92,92,.38); }
-.btn-icon-del:active { transform: scale(.96); }
-
-/* ══════════════════════════
-   MODAL BASE
-   ══════════════════════════ */
-.modalOverlay { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.72); justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
-.modalOverlay.activo { display: flex; }
-.contenedorModal1 {
-  background: var(--bg-surface); border: 1px solid var(--border-mid);
-  border-radius: var(--r-xl); width: 100%; max-width: 480px; overflow: hidden;
-  position: relative; animation: entrarModal .25s var(--spring); margin: auto;
-}
-.contenedorModal1::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(to right, transparent, var(--border-strong), transparent); pointer-events: none; }
-@keyframes entrarModal { from { transform: translateY(14px) scale(.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-.modal-header { padding: 22px 24px 0; display: flex; align-items: flex-start; justify-content: space-between; }
-.modal-header-info { display: flex; flex-direction: column; gap: 3px; }
-.modal-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--accent-text); margin-bottom: 2px; }
-.eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
-.modal-eyebrow-edit { color: var(--amber-text); }
-.eyebrow-dot-edit { background: var(--amber); }
-.modal-header h2 { font-size: 15.5px; font-weight: 700; color: var(--text-primary); letter-spacing: -.3px; }
-.modal-subtitle { font-size: 11.5px; color: var(--text-tertiary); margin-top: 1px; }
-.btn-cerrar { width: 26px; height: 26px; border-radius: var(--r-sm); background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-.btn-cerrar:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-mid); }
-.btn-cerrar svg { width: 11px; height: 11px; }
-.modal-divider { height: 1px; background: var(--border-hairline); margin: 18px 0 0; }
-
-/* MODAL BODY */
-.modal-body { padding: 18px 24px; display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; }
-.modal-body::-webkit-scrollbar { width: 3px; }
-.modal-body::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
-.field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 3px; }
-.field-req { color: var(--accent); font-size: 13px; line-height: 1; }
-
-.contenedorModal1 input[type="text"],
-.contenedorModal1 input[type="number"],
-.contenedorModal1 input[type="date"],
-.contenedorModal1 select {
-  background: var(--bg-input); border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm); padding: 8px 11px;
-  font-family: var(--font); font-size: 12.5px; color: var(--text-primary);
-  outline: none; width: 100%; caret-color: var(--accent);
-  -webkit-appearance: none; font-weight: 400;
-}
-.contenedorModal1 input::placeholder { color: var(--text-muted); }
-.contenedorModal1 input:hover, .contenedorModal1 select:hover { border-color: var(--border-mid); }
-.contenedorModal1 input:focus, .contenedorModal1 select:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-glow); }
-.contenedorModal1 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23485644' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer;
-}
-.contenedorModal1 select option { background: var(--bg-elevated); color: var(--text-primary); }
-
-/* Checkbox */
-.checkbox-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.checkbox-wrap input[type="checkbox"] { display: none; }
-.checkbox-box { width: 16px; height: 16px; border-radius: var(--r-xs); border: 1.5px solid var(--border-mid); background: var(--bg-input); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .14s var(--ease); }
-.checkbox-wrap:has(input:checked) .checkbox-box { background: var(--accent); border-color: var(--accent); }
-.checkbox-wrap:has(input:checked) .checkbox-box::after {
-  content: ''; width: 8px; height: 8px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23061006' stroke-width='3' stroke-linecap='round'%3E%3Cpolyline points='20,6 9,17 4,12'/%3E%3C/svg%3E");
-  background-size: contain; background-repeat: no-repeat;
-}
-.checkbox-label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
-
-/* Panel mangas */
-.mangas-panel { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
-.mangas-panel-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .6px; }
-.mangas-panel-head svg { width: 13px; height: 13px; color: var(--blue-text); }
-.field-hint-block { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
-.field-hint-block svg { width: 12px; height: 12px; flex-shrink: 0; }
-.cap-manga-box { background: var(--blue-dim); border: 1px solid var(--blue-border); border-radius: var(--r-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
-.cap-manga-label { font-size: 10.5px; color: var(--blue-text); }
-.cap-manga-val { font-size: 18px; font-weight: 700; color: var(--blue-text); font-family: var(--mono); }
-.cap-manga-sub { font-size: 10px; color: var(--blue-text); opacity: .7; }
-
-/* Capacidad total */
-.cap-total-box { background: var(--accent-glow); border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-.cap-total-label { font-size: 10.5px; color: var(--accent-text); margin-bottom: 4px; }
-.cap-total-val { font-size: 22px; font-weight: 700; color: var(--accent-text); font-family: var(--mono); letter-spacing: -.5px; }
-.cap-total-icon { width: 32px; height: 32px; background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; }
-.cap-total-icon svg { width: 15px; height: 15px; color: var(--accent-text); }
-
-/* MODAL FOOTER */
-.modal-footer { padding: 13px 24px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-hairline); }
-.modal-hint { font-size: 10.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
-.modal-hint svg { width: 11px; height: 11px; }
-.modal-footer-btns { display: flex; gap: 7px; }
-.btn-modal-cancel { padding: 8px 16px; border-radius: var(--r-md); background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: var(--text-tertiary); font-family: var(--font); font-size: 12.5px; font-weight: 500; cursor: pointer; }
-.btn-modal-cancel:hover { background: var(--bg-hover); color: var(--text-secondary); border-color: var(--border-mid); }
-.btn-modal-submit { padding: 8px 18px; border-radius: var(--r-md); background: var(--accent); border: 1px solid rgba(91,175,89,.5); box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.10); color: #061006; font-family: var(--font); font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.btn-modal-submit svg { width: 12px; height: 12px; }
-.btn-modal-submit:hover { background: var(--accent-bright); }
-.btn-modal-submit:active { transform: scale(.97); }
-.btn-modal-edit { background: var(--amber) !important; border-color: rgba(196,136,58,.5) !important; color: #1a0a00 !important; }
-.btn-modal-edit:hover { background: #D4A050 !important; }
-
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 13px; border-radius: var(--r-md);
-  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-  color: var(--text-tertiary); font-family: var(--font); font-size: 12.5px; font-weight: 500;
-  cursor: pointer; white-space: nowrap; line-height: 1;
-}
-.btn-secondary svg { width: 12px; height: 12px; }
-.btn-secondary:hover { background: var(--bg-hover); color: var(--text-secondary); border-color: var(--border-mid); }
-.btn-secondary:active { transform: scale(.97); }
-.btn-blue-s { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue-text); }
-.btn-blue-s:hover { background: rgba(81,144,200,0.18); color: var(--blue-text); border-color: rgba(81,144,200,.38); }
-
-/* ══════════════════════════
-   OCUPACIÓN DE POTREROS
-   ══════════════════════════ */
-.seccion-ocupacion { margin: 0 26px 0; display: flex; flex-direction: column; gap: 0; }
-.seccion-titulo { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 10px; }
-.seccion-titulo-left { display: flex; align-items: center; gap: 10px; }
-.seccion-titulo h3 { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
-
-.ocupacion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding-bottom: 4px; }
-.ocupacion-card { background: var(--bg-card); border: 1px solid var(--border-hairline); border-radius: var(--r-lg); overflow: hidden; animation: fadeUp .28s var(--ease) both; }
-.ocupacion-card:hover { border-color: var(--border-subtle); }
-.oc-header { padding: 12px 14px 10px; border-bottom: 1px solid var(--border-hairline); display: flex; align-items: center; justify-content: space-between; }
-.oc-nombre { font-size: 12.5px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 7px; }
-.oc-avatar { width: 22px; height: 22px; border-radius: var(--r-xs); background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-text); font-size: 9px; font-weight: 700; font-family: var(--mono); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.oc-cap-badge { font-size: 10px; font-weight: 600; font-family: var(--mono); padding: 2px 7px; border-radius: 20px; }
-.oc-cap-ok   { background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-text); }
-.oc-cap-warn { background: var(--amber-dim);   border: 1px solid var(--amber-border);  color: var(--amber-text); }
-.oc-cap-full { background: var(--danger-dim);  border: 1px solid var(--danger-border); color: var(--danger-text); }
-
-.oc-barra-wrap { padding: 10px 14px 6px; }
-.oc-barra-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 5px; }
-.oc-barra-bg { height: 4px; background: var(--bg-elevated); border-radius: 4px; overflow: hidden; }
-.oc-barra-fill { height: 100%; border-radius: 4px; transition: width .5s var(--ease); }
-.fill-ok   { background: var(--accent); }
-.fill-warn { background: var(--amber); }
-.fill-full { background: var(--danger); }
-
-.oc-vacas { padding: 6px 14px 12px; display: flex; flex-direction: column; gap: 4px; }
-.oc-vaca-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 8px; border-radius: var(--r-sm);
-  background: var(--bg-elevated); border: 1px solid var(--border-hairline);
-}
-.oc-vaca-info { display: flex; align-items: center; gap: 7px; }
-.oc-vaca-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-.oc-vaca-nombre { font-size: 12px; font-weight: 500; color: var(--text-primary); }
-.oc-vaca-manga { font-size: 10.5px; color: var(--blue-text); background: var(--blue-dim); border: 1px solid var(--blue-border); padding: 1px 6px; border-radius: 10px; }
-.oc-vaca-actions { display: flex; gap: 4px; }
-
-.btn-mover {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: var(--r-xs);
-  background: var(--amber-dim); border: 1px solid var(--amber-border);
-  color: var(--amber-text); font-size: 10.5px; font-weight: 500;
-  font-family: var(--font); cursor: pointer;
-}
-.btn-mover svg { width: 9px; height: 9px; }
-.btn-mover:hover { background: rgba(196,136,58,.18); }
-
-/* ── BOTÓN VER (hoja de vida) ── */
-.btn-ver {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: var(--r-xs);
-  background: var(--accent-glow); border: 1px solid var(--accent-border);
-  color: var(--accent-text); font-size: 10.5px; font-weight: 500;
-  font-family: var(--font); cursor: pointer;
-}
-.btn-ver svg { width: 9px; height: 9px; }
-.btn-ver:hover { background: var(--accent-dim); }
-
-.oc-empty { padding: 14px; font-size: 11.5px; color: var(--text-muted); text-align: center; }
-
-/* ══════════════════════════
-   HISTORIAL TABLE
-   ══════════════════════════ */
-.hist-table-wrap { max-height: 55vh; overflow-y: auto; }
-.hist-table-wrap::-webkit-scrollbar { width: 3px; }
-.hist-table-wrap::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
-.hist-empty { padding: 32px; text-align: center; font-size: 12px; color: var(--text-muted); }
-.badge-motivo { font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: var(--bg-elevated); border: 1px solid var(--border-hairline); color: var(--text-tertiary); }
-.dias-val { font-family: var(--mono); font-size: 11.5px; color: var(--text-secondary); }
-.estado-activo { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--accent-text); }
-.estado-activo::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); display: inline-block; }
-.estado-salida { font-size: 10.5px; color: var(--text-muted); font-family: var(--mono); }
-.modal-wide { max-width: 700px !important; }
-
-/* ══════════════════════════
-   MODAL RESUMEN
-   ══════════════════════════ */
-.resumen-check { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-dim); border: 2px solid var(--accent-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
-.resumen-check svg { width: 22px; height: 22px; color: var(--accent); }
-.resumen-titulo { text-align: center; font-size: 15.5px; font-weight: 700; color: var(--text-primary); letter-spacing: -.2px; }
-.resumen-sub { text-align: center; font-size: 11.5px; color: var(--text-tertiary); margin-bottom: 6px; }
-.resumen-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
-.resumen-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 2px 0; }
-.resumen-row + .resumen-row { border-top: 1px solid var(--border-hairline); padding-top: 9px; }
-.resumen-key { color: var(--text-tertiary); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-.resumen-key svg { width: 11px; height: 11px; flex-shrink: 0; }
-.resumen-val { color: var(--text-primary); font-weight: 600; }
-
-.toast { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--accent-border); color: var(--accent-text); padding: 11px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.3); opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity .22s var(--ease), transform .22s var(--ease) !important; }
-.toast svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
-.toast.show { opacity: 1; transform: translateY(0); }
-
-/* ══════════════════════════
-   HOJA DE VIDA — TABS
-   ══════════════════════════ */
-.hv-tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid var(--border-hairline); }
-.hv-tab {
-  padding: 9px 14px; font-size: 12px; font-weight: 500;
-  color: var(--text-tertiary); cursor: pointer; border-bottom: 2px solid transparent;
-  margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none;
-  font-family: var(--font);
-}
-.hv-tab.activo { color: var(--accent-text); border-bottom-color: var(--accent); }
-.hv-tab:hover:not(.activo) { color: var(--text-secondary); }
-.hv-tab-panel { display: none; flex-direction: column; gap: 10px; }
-.hv-tab-panel.activo { display: flex; }
-
-/* Perfil vaca */
-.hv-perfil { display: flex; align-items: flex-start; gap: 14px; padding: 4px 0 6px; }
-.hv-avatar { width: 52px; height: 52px; border-radius: var(--r-lg); background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-text); font-size: 15px; font-weight: 700; font-family: var(--mono); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.hv-nombre { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -.2px; }
-.hv-codigo { font-size: 11px; color: var(--text-tertiary); font-family: var(--mono); }
-.hv-estado-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-top: 4px; }
-.hp-prod { background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-text); }
-.hp-seco { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue-text); }
-.hp-enra { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber-text); }
-.hp-dot  { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-
-/* Stats hoja */
-.hv-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.hv-stat { background: var(--bg-elevated); border: 1px solid var(--border-hairline); border-radius: var(--r-md); padding: 10px 12px; text-align: center; }
-.hv-stat-val { font-size: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); letter-spacing: -.5px; }
-.hv-stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-top: 2px; }
-
-/* Datos generales */
-.hv-datos { background: var(--bg-elevated); border: 1px solid var(--border-hairline); border-radius: var(--r-md); overflow: hidden; }
-.hv-dato-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--border-hairline); font-size: 12px; }
-.hv-dato-row:last-child { border-bottom: none; }
-.hv-dato-lbl { color: var(--text-tertiary); display: flex; align-items: center; gap: 7px; }
-.hv-dato-lbl svg { width: 11px; height: 11px; flex-shrink: 0; }
-.hv-dato-val { color: var(--text-primary); font-weight: 500; text-align: right; }
-
-/* Trayectoria timeline */
-.hv-timeline { display: flex; flex-direction: column; }
-.hv-tl-item { display: flex; gap: 12px; padding-bottom: 14px; }
-.hv-tl-item:last-child { padding-bottom: 0; }
-.hv-tl-left { display: flex; flex-direction: column; align-items: center; }
-.hv-tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-elevated); flex-shrink: 0; margin-top: 3px; }
-.hv-tl-dot.activo { background: var(--accent-bright); box-shadow: 0 0 0 3px var(--accent-glow); }
-.hv-tl-line { width: 1px; flex: 1; background: var(--border-hairline); margin-top: 4px; }
-.hv-tl-item:last-child .hv-tl-line { display: none; }
-.hv-tl-content { flex: 1; padding-bottom: 2px; }
-.hv-tl-potrero { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
-.hv-tl-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-.hv-tl-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; margin-left: 5px; }
-.hv-tl-activo { background: var(--accent-glow); color: var(--accent-text); border: 1px solid var(--accent-border); }
-.hv-tl-dias { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
-
-/* Vacunas */
-.hv-vacuna-row { background: var(--bg-elevated); border: 1px solid var(--border-hairline); border-radius: var(--r-sm); padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; }
-.hv-vac-nombre { font-size: 12px; font-weight: 500; color: var(--text-primary); }
-.hv-vac-fecha  { font-size: 10.5px; color: var(--text-tertiary); font-family: var(--mono); margin-top: 2px; }
-.badge-vac-ok   { background: var(--accent-glow); color: var(--accent-text); border: 1px solid var(--accent-border); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
-.badge-vac-pend { background: var(--amber-dim);   color: var(--amber-text);   border: 1px solid var(--amber-border); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
-.badge-vac-venc { background: var(--danger-dim);  color: var(--danger-text);  border: 1px solid var(--danger-border); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
-.hv-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 18px 0; }
-
-/* Loading */
-.hv-loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 10px; color: var(--text-tertiary); font-size: 12.5px; }
-.spinner { width: 18px; height: 18px; border: 2px solid var(--border-mid); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ══════════════════════════
-   ANIMACIONES
-   ══════════════════════════ */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.stat-card { animation: fadeUp .28s var(--ease) both; }
-.stat-card:nth-child(1) { animation-delay: .04s; }
-.stat-card:nth-child(2) { animation-delay: .08s; }
-.stat-card:nth-child(3) { animation-delay: .12s; }
-.stat-card:nth-child(4) { animation-delay: .16s; }
-.contenedorTabla { animation: fadeUp .28s .18s var(--ease) both; }
-
-/* ══════════════════════════
-   RESPONSIVE
-   ══════════════════════════ */
-@media (max-width: 960px) {
-  aside { position: relative; width: 100%; height: auto; }
-  .main { margin-left: 0; width: 100%; }
-  .logo { padding: 14px 16px; }
-  .nav-section { padding: 10px 12px 6px; }
-  .menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  .menu a { margin-bottom: 0; }
-  .topbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
-  .topbar-left, .topbar-right { width: 100%; }
-  .topbar-right { justify-content: flex-start; flex-wrap: wrap; }
-  .stats-grid { padding: 16px 16px 0; grid-template-columns: repeat(2,1fr); }
-  .contenedorTabla { margin: 14px 16px; }
-  .contenedorTabla { overflow-x: auto; }
-  .contenedorTabla table { min-width: 960px; }
-}
-@media (max-width: 600px) {
-  .menu { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .field-row-2 { grid-template-columns: 1fr; }
-  .modal-footer { flex-direction: column; align-items: stretch; gap: 10px; }
-  .modal-footer-btns { width: 100%; }
-  .btn-modal-cancel, .btn-modal-submit { width: 100%; justify-content: center; }
-}
-    </style>
+    <link rel="stylesheet" href="../Css/layout-base.css">
+    <link rel="stylesheet" href="../Css/Dashboard.css">
+    <link rel="stylesheet" href="../Css/potrero.css">
 </head>
 
 <body>
 
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
-<aside>
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#061006" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2C6 2 3 7 3 12s3 10 9 10 9-5 9-10S18 2 12 2"/>
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                    <circle cx="9" cy="9" r=".8" fill="#061006"/>
-                    <circle cx="15" cy="9" r=".8" fill="#061006"/>
-                </svg>
-            </div>
-            <div class="logo-text">
-                <div class="logo-name">AGRO<span>CONTROL</span></div>
-                <div class="logo-sub">Gestión Ganadera</div>
-            </div>
-        </div>
-
-        <div class="nav-section">
-            <div class="menu-label">Principal</div>
-            <div class="menu">
-                <a href="Dashboard.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                    </svg>
-                    Dashboard
-                </a>
-                <a href="Registro_Vacas.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <ellipse cx="12" cy="8" rx="7" ry="5"/>
-                        <path d="M5 13c0 3.3 3.1 6 7 6s7-2.7 7-6"/>
-                    </svg>
-                    Gestión de Vacas
-                </a>
-                <a href="produccion_lechera.php">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M3 9l9-7 9 7v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
-                        <polyline points="9,22 9,12 15,12 15,22"/>
-                    </svg>
-                    Producción Lechera
-                </a>
-                <a href="potrero.php" class="active">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                    </svg>
-                    Potreros y Mangas
-                </a>
-                <a href="vacunaciones.html">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 3l2 2-7 7"/><path d="M17 5l2 2"/><path d="M3 21l9-9"/><path d="M14.5 5.5l-11 11 4 4 11-11z"/></svg>
-                    Vacunaciones
-                </a>
-            </div>
-        </div>
-
-        <div class="nav-divider"></div>
-
-        <div class="nav-section">
-            <div class="menu-label">Sistema</div>
-            <div class="menu">
-                <a href="logout.php" class="logout-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                        <polyline points="16,17 21,12 16,7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    Cerrar sesión
-                </a>
-            </div>
-        </div>
-    </div>
-</aside>
+<?php include 'sidebar.php'; ?>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <div class="main">
@@ -747,13 +71,11 @@ tbody td:last-child { text-align: right; }
     <!-- STATS -->
     <div class="stats-grid">
         <?php
-            include("../Config/conexion.php");
-            $con = conexion();
-            $uid = (int)$_SESSION['id'];
-            $totalPotreros  = mysqli_fetch_row(mysqli_query($con, "SELECT COUNT(*) FROM potreros WHERE usuario_id=$uid"))[0];
-            $totalHa        = mysqli_fetch_row(mysqli_query($con, "SELECT SUM(hectareas) FROM potreros WHERE usuario_id=$uid"))[0] ?? 0;
-            $totalMangas    = mysqli_fetch_row(mysqli_query($con, "SELECT SUM(num_mangas) FROM potreros WHERE tiene_mangas=1 AND usuario_id=$uid"))[0] ?? 0;
-            $totalCapacidad = mysqli_fetch_row(mysqli_query($con, "SELECT SUM(capacidad_max) FROM potreros WHERE usuario_id=$uid"))[0] ?? 0;
+            $uid = current_user_id();
+            $totalPotreros  = (int)db_value($con, "SELECT COUNT(*) FROM potreros WHERE usuario_id = ?", "i", [$uid]);
+            $totalHa        = (float)(db_value($con, "SELECT SUM(hectareas) FROM potreros WHERE usuario_id = ?", "i", [$uid]) ?? 0);
+            $totalMangas    = (int)(db_value($con, "SELECT SUM(num_mangas) FROM potreros WHERE tiene_mangas = 1 AND usuario_id = ?", "i", [$uid]) ?? 0);
+            $totalCapacidad = (int)(db_value($con, "SELECT SUM(capacidad_max) FROM potreros WHERE usuario_id = ?", "i", [$uid]) ?? 0);
         ?>
         <div class="stat-card">
             <div class="stat-top">
@@ -812,10 +134,10 @@ tbody td:last-child { text-align: right; }
         $sqlPotreros = "SELECT p.*, COUNT(a.id) as vacas_asignadas
             FROM potreros p
             LEFT JOIN asignaciones a ON a.potrero_id = p.id AND a.fecha_salida IS NULL
-            WHERE p.usuario_id = $uid
+            WHERE p.usuario_id = ?
             GROUP BY p.id
             ORDER BY p.nombre ASC";
-        $resPotreros = mysqli_query($con, $sqlPotreros);
+        $resPotreros = db_result($con, $sqlPotreros, "i", [$uid]);
         $potrerosList = [];
         while ($rp = mysqli_fetch_assoc($resPotreros)) $potrerosList[] = $rp;
     ?>
@@ -838,9 +160,9 @@ tbody td:last-child { text-align: right; }
             $sqlVacas = "SELECT v.id, v.nombre, v.codigo, v.raza, v.estado, a.id as asig_id, a.manga_num
                          FROM asignaciones a
                          JOIN vacas v ON v.id = a.vaca_id
-                         WHERE a.potrero_id = {$pt['id']} AND a.fecha_salida IS NULL
+                         WHERE a.potrero_id = ? AND a.fecha_salida IS NULL
                          ORDER BY v.nombre ASC";
-            $resVacas = mysqli_query($con, $sqlVacas);
+            $resVacas = db_result($con, $sqlVacas, "i", [(int)$pt['id']]);
         ?>
         <div class="ocupacion-card">
             <div class="oc-header">
@@ -873,7 +195,7 @@ tbody td:last-child { text-align: right; }
                     </div>
                     <div class="oc-vaca-actions">
                         <button class="btn-ver"
-                            onclick="abrirHojaVida(<?= (int)$vaca['id'] ?>, '<?= htmlspecialchars($vaca['nombre'], ENT_QUOTES) ?>')">
+                            onclick="abrirHojaVida(<?= (int)$vaca['id'] ?>, <?= json_encode($vaca['nombre']) ?>)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>
@@ -881,7 +203,7 @@ tbody td:last-child { text-align: right; }
                             Ver
                         </button>
                         <button class="btn-mover"
-                            onclick="abrirMover(<?= $vaca['asig_id'] ?>, '<?= htmlspecialchars($vaca['nombre'], ENT_QUOTES) ?>', '<?= htmlspecialchars($pt['nombre'], ENT_QUOTES) ?>', <?= $pt['id'] ?>)">
+                            onclick="abrirMover(<?= (int)$vaca['asig_id'] ?>, <?= json_encode($vaca['nombre']) ?>, <?= json_encode($pt['nombre']) ?>, <?= (int)$pt['id'] ?>)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
@@ -939,8 +261,7 @@ tbody td:last-child { text-align: right; }
                         'pasto_angola'          => 250,
                         'pasto_natural'         => 400
                     ];
-                    $sql   = "SELECT * FROM potreros WHERE usuario_id=$uid ORDER BY fecha_registro DESC";
-                    $query = mysqli_query($con, $sql);
+                    $query = db_result($con, "SELECT * FROM potreros WHERE usuario_id = ? ORDER BY fecha_registro DESC", "i", [$uid]);
                     while ($row = mysqli_fetch_assoc($query)):
                         $initials = strtoupper(substr($row['nombre'], 0, 2));
                         $capacidadGeneral = (int) $row['capacidad_max'];
@@ -996,11 +317,11 @@ tbody td:last-child { text-align: right; }
                             <!-- ✅ BOTÓN EDITAR — abre modal en vez de redirigir -->
                             <button class="btn-icon-edit"
                                 onclick="abrirEditar(
-                                    <?= $row['id'] ?>,
-                                    '<?= htmlspecialchars($row['nombre'], ENT_QUOTES) ?>',
-                                    <?= $row['hectareas'] ?>,
-                                    '<?= $row['tipo_pasto'] ?>',
-                                    <?= $row['tiene_mangas'] ?>,
+                                    <?= (int)$row['id'] ?>,
+                                    <?= json_encode($row['nombre']) ?>,
+                                    <?= (float)$row['hectareas'] ?>,
+                                    <?= json_encode($row['tipo_pasto']) ?>,
+                                    <?= (int)$row['tiene_mangas'] ?>,
                                     <?= (int)$row['num_mangas'] ?>,
                                     <?= (float)$row['tamaño_manga'] ?>
                                 )">
@@ -1010,16 +331,19 @@ tbody td:last-child { text-align: right; }
                                 </svg>
                                 Editar
                             </button>
-                            <a href="eliminarp.php?id=<?= $row['id'] ?>"
-                               onclick="return confirm('¿Está seguro de eliminar este potrero?')"
-                               class="btn-icon-del">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                    <polyline points="3,6 5,6 21,6"/>
-                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                                    <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
-                                </svg>
-                                Eliminar
-                            </a>
+                            <form method="POST" action="eliminarp.php" style="display:inline"
+                                  onsubmit="return confirm('¿Está seguro de eliminar este potrero?')">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                                <button type="submit" class="btn-icon-del">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                        <polyline points="3,6 5,6 21,6"/>
+                                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                                        <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+                                    </svg>
+                                    Eliminar
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -1048,6 +372,7 @@ tbody td:last-child { text-align: right; }
         </div>
         <div class="modal-divider"></div>
         <form action="CrearPotrero.php" method="POST">
+            <?= csrf_field() ?>
             <div class="modal-body">
                 <div class="field-row-2">
                     <div class="field">
@@ -1173,6 +498,7 @@ tbody td:last-child { text-align: right; }
         </div>
         <div class="modal-divider"></div>
         <form action="ActualizarPotrero.php" method="POST">
+            <?= csrf_field() ?>
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-body">
                 <div class="field-row-2">
@@ -1300,6 +626,7 @@ tbody td:last-child { text-align: right; }
         </div>
         <div class="modal-divider"></div>
         <form action="AsignarVaca.php" method="POST">
+            <?= csrf_field() ?>
             <div class="modal-body">
                 <div class="field">
                     <label class="field-label" for="asig_vaca_id">Vaca <span class="field-req">*</span></label>
@@ -1307,11 +634,11 @@ tbody td:last-child { text-align: right; }
                         <option value="">-- Seleccione una vaca --</option>
                         <?php
                             $sqlVacasLibres = "SELECT v.id, v.nombre, v.codigo FROM vacas v
-                                WHERE v.usuario_id = $uid
+                                WHERE v.usuario_id = ?
                                 AND v.id NOT IN (
                                     SELECT vaca_id FROM asignaciones WHERE fecha_salida IS NULL
                                 ) ORDER BY v.nombre ASC";
-                            $resVL = mysqli_query($con, $sqlVacasLibres);
+                            $resVL = db_result($con, $sqlVacasLibres, "i", [$uid]);
                             while ($vl = mysqli_fetch_assoc($resVL)):
                         ?>
                         <option value="<?= $vl['id'] ?>"><?= htmlspecialchars($vl['nombre']) ?> (<?= $vl['codigo'] ?>)</option>
@@ -1342,9 +669,12 @@ tbody td:last-child { text-align: right; }
                             if ($capManga <= 0) $capManga = (int)$pt['capacidad_max'];
                             $vacasPorManga = [];
                             for ($mn = 1; $mn <= $numMgs; $mn++) {
-                                $cnt = mysqli_fetch_row(mysqli_query($con,
-                                    "SELECT COUNT(*) FROM asignaciones WHERE potrero_id={$pt['id']} AND manga_num=$mn AND fecha_salida IS NULL"
-                                ))[0];
+                                $cnt = db_value(
+                                    $con,
+                                    "SELECT COUNT(*) FROM asignaciones WHERE potrero_id = ? AND manga_num = ? AND fecha_salida IS NULL",
+                                    "ii",
+                                    [(int)$pt['id'], $mn]
+                                );
                                 $vacasPorManga[$mn] = (int)$cnt;
                             }
                             $dataVacasManga = htmlspecialchars(json_encode($vacasPorManga));
@@ -1363,10 +693,6 @@ tbody td:last-child { text-align: right; }
                     <select name="manga_num" id="asig_manga_num">
                         <option value="">-- Sin manga específica --</option>
                     </select>
-                </div>
-                <div class="field">
-                    <label class="field-label" for="asig_usuario">Responsable <span class="field-req">*</span></label>
-                    <input type="text" id="asig_usuario" name="usuario" placeholder="Nombre del encargado" required>
                 </div>
                 <div class="field">
                     <label class="field-label" for="asig_fecha">Fecha de entrada <span class="field-req">*</span></label>
@@ -1414,6 +740,7 @@ tbody td:last-child { text-align: right; }
         </div>
         <div class="modal-divider"></div>
         <form action="MoverVaca.php" method="POST">
+            <?= csrf_field() ?>
             <input type="hidden" name="asignacion_id" id="mover_asig_id">
             <input type="hidden" name="potrero_actual_id" id="mover_potrero_actual_id">
             <div class="modal-body">
@@ -1435,10 +762,6 @@ tbody td:last-child { text-align: right; }
                     <select name="manga_num" id="mover_manga_num">
                         <option value="">-- Sin manga específica --</option>
                     </select>
-                </div>
-                <div class="field">
-                    <label class="field-label" for="mover_usuario">Responsable <span class="field-req">*</span></label>
-                    <input type="text" id="mover_usuario" name="usuario" placeholder="Nombre del encargado" required>
                 </div>
                 <div class="field">
                     <label class="field-label" for="mover_fecha">Fecha de salida <span class="field-req">*</span></label>
@@ -1490,9 +813,10 @@ tbody td:last-child { text-align: right; }
                             FROM asignaciones a
                             JOIN vacas v ON v.id = a.vaca_id
                             JOIN potreros p ON p.id = a.potrero_id
+                            WHERE v.usuario_id = ? AND p.usuario_id = ?
                             ORDER BY a.fecha_entrada DESC
                             LIMIT 100";
-                $resHist = mysqli_query($con, $sqlHist);
+                $resHist = db_result($con, $sqlHist, "ii", [$uid, $uid]);
             ?>
             <?php if (!$resHist || mysqli_num_rows($resHist) === 0): ?>
                 <div class="hist-empty">No hay registros de asignaciones aún.</div>

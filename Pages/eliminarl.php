@@ -1,16 +1,28 @@
 <?php
-    include("../Config/conexion.php");
-    $con = conexion();
+require_once("../Config/conexion.php");
+require_login();
 
-    $id=$_GET['id'];
+// Solo acepta POST para evitar exponer el token CSRF en URLs/logs
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: produccion_lechera.php");
+    exit();
+}
 
-    $sql="DELETE FROM registroleche WHERE id=$id";
-    $query=mysqli_query($con,$sql);
+if (!csrf_validate($_POST['_csrf_token'] ?? '')) {
+    http_response_code(403);
+    exit('Solicitud no autorizada.');
+}
 
-    if($query){
-        header("Location:produccion_lechera.php");
-        exit();
-    }else{
-        echo"No se pudo eliminar el registro de produccion ";
-    }
+$con = conexion();
+
+try {
+    $id = input_int($_POST, 'id', 1);
+    db_execute($con, "DELETE FROM registroleche WHERE id = ? AND usuario_id = ?", "ii", [$id, current_user_id()]);
+    header("Location: produccion_lechera.php?ok=eliminado");
+    exit();
+} catch (Throwable $e) {
+    app_log($e->getMessage());
+    header("Location: produccion_lechera.php?error=db");
+    exit();
+}
 ?>

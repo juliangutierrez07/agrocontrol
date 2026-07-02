@@ -1,0 +1,95 @@
+/* ═══════════════════════════════════════════════════════════
+   AgroControl — layout-base.css
+   Shared layout structure for all modules (sidebar + main)
+   Do NOT override these styles in module-specific CSS files
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── LAYOUT: Body + Sidebar + Main ── */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font, 'Inter', system-ui, sans-serif);
+  background: var(--bg, #0B0F0C);
+  color: var(--text, #F1F5F2);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* ── Sidebar (shared component) ── */
+aside#sidebar,
+aside.sidebar {
+  width: var(--sidebar-w, 240px);
+  height: 100vh;
+  background: var(--surface, #101511);
+  border-right: 1px solid var(--border, rgba(255,255,255,0.055));
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: width .25s cubic-bezier(0.4,0,0.2,1), transform .25s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Main content area ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #0B0F0C);
+  overflow: hidden;
+}
+
+/* ── Content scrollable area ── */
+.content,
+.main > *:not(.topbar) {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-m, rgba(255,255,255,0.10));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-m, rgba(255,255,255,0.15));
+}
+
+/* ── Global reset ── */
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font, 'Inter', system-ui, sans-serif);
+}
