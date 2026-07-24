@@ -70,6 +70,37 @@ $queryVacunas = db_result($con,
 $proximasVacunas = [];
 while ($row = mysqli_fetch_assoc($queryVacunas)) { $proximasVacunas[] = $row; }
 
+// ── ALERTAS DE PRODUCCIÓN (caída ≥10% del promedio diario reciente vs. base) ──
+// Reciente = últimos 7 días. Base = los 30 días anteriores a esos 7 (ventanas sin solape).
+// Solo se evalúan vacas en producción con al menos 3 registros en cada ventana,
+// para no marcar caídas por falta de datos.
+$queryAlertas = db_result($con,
+    "SELECT v.nombre, r.avg_reciente, r.avg_base
+     FROM vacas v
+     INNER JOIN (
+         SELECT vaca_id,
+                AVG(CASE WHEN fecha >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) THEN litros END) AS avg_reciente,
+                COUNT(CASE WHEN fecha >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) THEN 1 END) AS n_reciente,
+                AVG(CASE WHEN fecha BETWEEN DATE_SUB(CURDATE(), INTERVAL 36 DAY) AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN litros END) AS avg_base,
+                COUNT(CASE WHEN fecha BETWEEN DATE_SUB(CURDATE(), INTERVAL 36 DAY) AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) AS n_base
+         FROM registroleche
+         WHERE usuario_id = ? AND fecha >= DATE_SUB(CURDATE(), INTERVAL 36 DAY)
+         GROUP BY vaca_id
+     ) r ON r.vaca_id = v.id
+     WHERE v.usuario_id = ? AND v.estado = 'produccion'
+       AND r.n_reciente >= 3 AND r.n_base >= 3 AND r.avg_base > 0
+       AND (r.avg_base - r.avg_reciente) / r.avg_base >= 0.10
+     ORDER BY (r.avg_base - r.avg_reciente) / r.avg_base DESC
+     LIMIT 6",
+    "ii", [$usuario_id, $usuario_id]);
+$alertasProduccion = [];
+while ($row = mysqli_fetch_assoc($queryAlertas)) {
+    $row['avg_reciente'] = (float)$row['avg_reciente'];
+    $row['avg_base']     = (float)$row['avg_base'];
+    $row['caida_pct']    = (int)round((($row['avg_base'] - $row['avg_reciente']) / $row['avg_base']) * 100);
+    $alertasProduccion[] = $row;
+}
+
 $userName = e($_SESSION['nombre'] ?? 'Usuario');
 $userRole = e($_SESSION['rol'] ?? 'usuario');
 $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
@@ -131,16 +162,12 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                 <input type="text" placeholder="Buscar..." autocomplete="off">
             </label>
 
-            <!-- Fecha -->
-            <div class="tb-chip" title="Fecha actual">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                    <rect x="1" y="2" width="14" height="12" rx="2"/>
-                    <line x1="11" y1="1" x2="11" y2="3.5"/>
-                    <line x1="5" y1="1" x2="5" y2="3.5"/>
-                    <line x1="1" y1="6" x2="15" y2="6"/>
-                </svg>
-                <?php echo date('d/m/Y'); ?>
+            <!-- Pill estado finca activa -->
+            <div class="tb-status-pill" aria-label="Estado del sistema">
+                <span class="tb-status-dot" aria-hidden="true"></span>
+                <?php echo e($userName); ?> · Activo <?php echo date('d/m · H:i'); ?>
             </div>
+            <!-- TODO: implementar usuarios.ultimo_acceso para mostrar "Sincronizado hace X min" -->
 
             <!-- Separador visual -->
             <div class="tb-sep" aria-hidden="true"></div>
@@ -184,7 +211,8 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
         <section class="stats-grid">
 
             <!-- Total Vacas -->
-            <div class="stat-card sc-green" style="--delay:.05s">
+            <!-- KPI: Total Vacas -->
+            <div class="stat-card">
                 <div class="sc-head">
                     <span class="sc-label">Total Vacas</span>
                     <div class="sc-icon">
@@ -194,15 +222,22 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                         </svg>
                     </div>
                 </div>
+                <?php if ($totalVacas > 0): ?>
                 <div class="sc-value" data-count="<?php echo $totalVacas; ?>">0</div>
-                <div class="sc-delta sc-up">
+                <div class="sc-delta">
                     <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2,8 6,4 10,8"/></svg>
                     <?php echo $totalProd; ?> en producción
                 </div>
+                <?php else: ?>
+                <div class="sc-empty">
+                    <span class="sc-empty-msg">Aún no hay animales registrados</span>
+                    <a href="Registro_Vacas.php" class="sc-empty-cta">Registrar ahora →</a>
+                </div>
+                <?php endif; ?>
             </div>
 
-            <!-- Producción Hoy -->
-            <div class="stat-card sc-blue" style="--delay:.10s">
+            <!-- KPI: Producción Hoy -->
+            <div class="stat-card">
                 <div class="sc-head">
                     <span class="sc-label">Producción Hoy</span>
                     <div class="sc-icon">
@@ -211,15 +246,20 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                         </svg>
                     </div>
                 </div>
+                <?php if ($produccionHoy > 0): ?>
                 <div class="sc-value" data-count="<?php echo (int)$produccionHoy; ?>">0<span class="sc-unit">L</span></div>
-                <div class="sc-delta sc-neutral">
-                    <?php echo number_format($litrosSemana,0); ?>L esta semana
-                </div>
+                <div class="sc-delta"><?php echo number_format($litrosSemana,0); ?>L esta semana</div>
                 <canvas class="sc-spark" id="spark2"></canvas>
+                <?php else: ?>
+                <div class="sc-empty">
+                    <span class="sc-empty-msg">Sin registros de ordeño hoy</span>
+                    <a href="produccion_lechera.php" class="sc-empty-cta">Registrar ordeño →</a>
+                </div>
+                <?php endif; ?>
             </div>
 
-            <!-- Preñadas -->
-            <div class="stat-card sc-amber" style="--delay:.15s">
+            <!-- KPI: Vacas Preñadas -->
+            <div class="stat-card">
                 <div class="sc-head">
                     <span class="sc-label">Vacas Preñadas</span>
                     <div class="sc-icon">
@@ -230,14 +270,19 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                         </svg>
                     </div>
                 </div>
+                <?php if ($vacasPrenadas > 0): ?>
                 <div class="sc-value" data-count="<?php echo $vacasPrenadas; ?>">0</div>
-                <div class="sc-delta sc-neutral">
-                    <?php echo $totalVacas > 0 ? round($vacasPrenadas/$totalVacas*100) : 0; ?>% del hato
+                <div class="sc-delta"><?php echo $totalVacas > 0 ? round($vacasPrenadas/$totalVacas*100) : 0; ?>% del hato</div>
+                <?php else: ?>
+                <div class="sc-empty">
+                    <span class="sc-empty-msg">Ninguna enrazada registrada</span>
+                    <a href="Registro_Vacas.php" class="sc-empty-cta">Actualizar estado →</a>
                 </div>
+                <?php endif; ?>
             </div>
 
-            <!-- En Secado -->
-            <div class="stat-card sc-purple" style="--delay:.20s">
+            <!-- KPI: En Secado -->
+            <div class="stat-card">
                 <div class="sc-head">
                     <span class="sc-label">En Secado</span>
                     <div class="sc-icon">
@@ -247,10 +292,15 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                         </svg>
                     </div>
                 </div>
+                <?php if ($vacasSecado > 0): ?>
                 <div class="sc-value" data-count="<?php echo $vacasSecado; ?>">0</div>
-                <div class="sc-delta sc-neutral">
-                    <?php echo $totalVacas > 0 ? round($vacasSecado/$totalVacas*100) : 0; ?>% del total
+                <div class="sc-delta"><?php echo $totalVacas > 0 ? round($vacasSecado/$totalVacas*100) : 0; ?>% del total</div>
+                <?php else: ?>
+                <div class="sc-empty">
+                    <span class="sc-empty-msg">Ninguna en secado actualmente</span>
+                    <a href="Registro_Vacas.php" class="sc-empty-cta">Actualizar estado →</a>
                 </div>
+                <?php endif; ?>
             </div>
 
         </section>
@@ -273,7 +323,19 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                     </a>
                 </div>
                 <div class="chart-area">
+                    <?php if (empty($lineaDias)): ?>
+                    <div class="chart-placeholder">
+                        <svg class="chart-placeholder-icon" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <polyline points="3,17 8,12 13,15 21,7"/>
+                            <line x1="3" y1="20" x2="21" y2="20"/>
+                        </svg>
+                        <span class="chart-placeholder-msg">Aún no hay registros de producción</span>
+                        <a href="produccion_lechera.php" class="chart-placeholder-cta">Registrar primer ordeño →</a>
+                    </div>
+                    <?php else: ?>
                     <canvas id="chartLine"></canvas>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -389,6 +451,48 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
             </div>
 
         </div><!-- /row-grid -->
+
+        <!-- ─── ROW 4: Alertas de Producción ─── -->
+        <div class="panel panel-vaccines">
+            <div class="panel-head">
+                <div class="panel-head-left">
+                    <span class="panel-title">Alertas de Producción</span>
+                    <span class="panel-badge">Caída ≥10% vs. promedio</span>
+                </div>
+                <a href="produccion_lechera.php" class="panel-action">
+                    Ver detalle
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="3" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/>
+                    </svg>
+                </a>
+            </div>
+
+            <?php if (!empty($alertasProduccion)): ?>
+            <div class="vaccine-list">
+                <?php foreach ($alertasProduccion as $a): ?>
+                <div class="vac-row vac-warning">
+                    <div class="cow-cell">
+                        <div class="cow-avatar"><?php echo strtoupper(substr($a['nombre'],0,1)); ?></div>
+                        <div class="vac-copy">
+                            <span class="cow-name"><?php echo e($a['nombre']); ?></span>
+                            <span class="vac-type"><?php echo number_format($a['avg_base'],1); ?>L → <?php echo number_format($a['avg_reciente'],1); ?>L prom./día</span>
+                        </div>
+                    </div>
+                    <div class="vac-meta">
+                        <span class="pill pill-amber">-<?php echo $a['caida_pct']; ?>%</span>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <div class="empty-block">
+                <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="empty-icon">
+                    <polyline points="8,28 16,20 22,25 32,12"/>
+                </svg>
+                <p>Sin caídas de producción relevantes</p>
+            </div>
+            <?php endif; ?>
+        </div>
 
     </div><!-- /content -->
 </div><!-- /main -->

@@ -20,6 +20,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             exit();
         }
 
+        if ($rol !== 'administrador') {
+            $objetivo = db_one($con, "SELECT rol, activo FROM usuarios WHERE id = ? LIMIT 1", "i", [$id]);
+            $eraAdminActivo = $objetivo && $objetivo['rol'] === 'administrador' && (int)$objetivo['activo'] === 1;
+            if ($eraAdminActivo) {
+                $otrosAdmins = (int)db_value(
+                    $con,
+                    "SELECT COUNT(*) FROM usuarios WHERE rol = 'administrador' AND activo = 1 AND id != ?",
+                    "i",
+                    [$id]
+                );
+                if ($otrosAdmins === 0) {
+                    header("Location: usuarios.php?error=ultimo_admin");
+                    exit();
+                }
+            }
+        }
+
         $existe = db_value($con, "SELECT id FROM usuarios WHERE correo = ? AND id != ? LIMIT 1", "si", [$correo, $id]);
         if ($existe) {
             header("Location: usuarios.php?error=correo_existente");

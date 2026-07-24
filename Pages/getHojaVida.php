@@ -1,4 +1,5 @@
 <?php
+define('AC_JSON_ENDPOINT', true);
 require_once("../Config/conexion.php");
 require_login();
 $con = conexion();

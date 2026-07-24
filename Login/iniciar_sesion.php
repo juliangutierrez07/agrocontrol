@@ -7,6 +7,11 @@ $mensaje   = "";
 $tipo      = "";
 $redirigir = false;
 
+if ($_SERVER["REQUEST_METHOD"] !== "POST" && ($_GET['error'] ?? '') === 'sesion_cerrada') {
+    $mensaje = "Tu cuenta fue desactivada por un administrador. Contacta al responsable de la finca.";
+    $tipo    = "error";
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     try {
         require_csrf();
@@ -35,7 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
             }
 
-            if ($usuario && $passwordValida) {
+            if ($usuario && $passwordValida && (int)($usuario['activo'] ?? 1) === 0) {
+                $mensaje = "Tu cuenta ha sido desactivada. Contacta al administrador.";
+                $tipo    = "error";
+            } elseif ($usuario && $passwordValida) {
                 login_rate_limit_reset();
                 session_regenerate_id(true);
                 $_SESSION['id']     = (int)$usuario['id'];

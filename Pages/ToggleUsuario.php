@@ -22,13 +22,27 @@ try {
         exit();
     }
 
-    $usuario = db_one($con, "SELECT activo FROM usuarios WHERE id = ?", "i", [$id]);
+    $usuario = db_one($con, "SELECT rol, activo FROM usuarios WHERE id = ?", "i", [$id]);
     if (!$usuario) {
         header("Location: usuarios.php?error=datos_invalidos");
         exit();
     }
 
     $nuevoEstado = (int)$usuario['activo'] === 1 ? 0 : 1;
+
+    if ($nuevoEstado === 0 && $usuario['rol'] === 'administrador') {
+        $otrosAdmins = (int)db_value(
+            $con,
+            "SELECT COUNT(*) FROM usuarios WHERE rol = 'administrador' AND activo = 1 AND id != ?",
+            "i",
+            [$id]
+        );
+        if ($otrosAdmins === 0) {
+            header("Location: usuarios.php?error=ultimo_admin");
+            exit();
+        }
+    }
+
     db_execute($con, "UPDATE usuarios SET activo = ? WHERE id = ?", "ii", [$nuevoEstado, $id]);
 
     app_log('[ADMIN] Usuario ID ' . $id . ' marcado como ' . ($nuevoEstado ? 'activo' : 'inactivo') . ' por admin ID ' . current_user_id());

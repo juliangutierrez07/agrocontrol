@@ -143,6 +143,7 @@ $uid = current_user_id();
                 'password_debil'    => 'La contraseña debe tener mínimo 8 caracteres',
                 'auto_desactivar'   => 'No puedes desactivar tu propia cuenta',
                 'auto_degradar'     => 'No puedes quitarte a ti mismo el rol de administrador',
+                'ultimo_admin'      => 'Debe existir al menos un administrador activo. Asigna el rol de administrador a otro usuario antes de realizar este cambio.',
                 default             => 'Ocurrió un error. Intente de nuevo'
             } ?>
         </div>

@@ -118,12 +118,58 @@ function start_secure_session(): void
     }
 }
 
+function require_login_reject(string $motivo = ''): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
+        }
+        session_destroy();
+    }
+
+    if (defined('AC_JSON_ENDPOINT') && AC_JSON_ENDPOINT) {
+        json_response(['error' => 'No autorizado'], 401);
+    }
+
+    $query = $motivo !== '' ? ('?error=' . $motivo) : '';
+    header('Location: ../Login/iniciar_sesion.php' . $query);
+    exit();
+}
+
 function require_login(): void
 {
     start_secure_session();
     if (empty($_SESSION['id'])) {
-        header('Location: ../Login/iniciar_sesion.php');
-        exit();
+        require_login_reject();
+    }
+
+    static $revalidado = false;
+    if ($revalidado) {
+        return;
+    }
+    $revalidado = true;
+
+    try {
+        $usuario = db_one(
+            conexion(),
+            "SELECT rol, activo FROM usuarios WHERE id = ? LIMIT 1",
+            "i",
+            [(int)$_SESSION['id']]
+        );
+    } catch (Throwable $e) {
+        // Fallo transitorio de BD: no desloguear a todos, solo registrar.
+        app_log('[SESSION-REVALIDATE] ' . $e->getMessage());
+        return;
+    }
+
+    if (!$usuario || (int)$usuario['activo'] !== 1) {
+        require_login_reject('sesion_cerrada');
+    }
+
+    if (($_SESSION['rol'] ?? null) !== $usuario['rol']) {
+        $_SESSION['rol'] = $usuario['rol'];
     }
 }
 

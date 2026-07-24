@@ -19,7 +19,7 @@
 .intro-card {
   padding: 22px;
   background:
-    radial-gradient(circle at top right, rgba(91,175,89,.14), transparent 34%),
+    radial-gradient(circle at top right, rgba(99,179,237,.14), transparent 34%),
     var(--bg-card);
 }
 
@@ -79,8 +79,8 @@
   padding: 18px 22px;
   border-color: var(--accent-border);
   background:
-    radial-gradient(circle at right top, rgba(91,175,89,.18), transparent 30%),
-    linear-gradient(135deg, rgba(91,175,89,.12), var(--bg-card));
+    radial-gradient(circle at right top, rgba(99,179,237,.18), transparent 30%),
+    linear-gradient(135deg, rgba(99,179,237,.12), var(--bg-card));
 }
 
 .current-pay-label {

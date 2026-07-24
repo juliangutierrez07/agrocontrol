@@ -59,6 +59,7 @@ CREATE TABLE usuarios (
     correo   VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     rol      VARCHAR(30)  NOT NULL DEFAULT 'usuario',
+    activo   TINYINT(1)   NOT NULL DEFAULT 1,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
