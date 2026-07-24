@@ -12,10 +12,15 @@ COPY . /var/www/html/
 # Instala Composer y las dependencias del proyecto
 WORKDIR /var/www/html
 
-# Configura Home.php como archivo de entrada por defecto
-RUN echo "DirectoryIndex Home.php index.php" > /etc/apache2/conf-available/directoryindex.conf \
-    && a2enconf directoryindex
-
+# Redirige la raíz del sitio hacia Pages/Home.php
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html\n\
+    RedirectMatch ^/$ /Pages/Home.php\n\
+    <Directory /var/www/html>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 # Ajusta permisos (por si tu app escribe archivos, logs, etc.)
 RUN chown -R www-data:www-data /var/www/html
 
