@@ -10,9 +10,7 @@ RUN a2enmod rewrite
 COPY . /var/www/html/
 
 # Instala Composer y las dependencias del proyecto
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
-RUN composer install --no-dev --optimize-autoloader
 
 # Configura Home.php como archivo de entrada por defecto
 RUN echo "DirectoryIndex Home.php index.php" > /etc/apache2/conf-available/directoryindex.conf \
