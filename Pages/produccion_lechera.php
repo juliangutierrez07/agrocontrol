@@ -298,7 +298,7 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
 
         <div class="modal-divider"></div>
 
-        <form action="CrearL.php" method="POST">
+        <form action="crearL.php" method="POST">
             <?php echo csrf_field(); ?>
             <div class="modal-body">
                 <div class="field">
