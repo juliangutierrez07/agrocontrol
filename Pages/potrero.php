@@ -1232,7 +1232,8 @@ function abrirEditar(id, nombre, hectareas, tipoPasto, tieneMangas, numMangas, t
 }
 
 function calcularCapacidadEdit() {
-    const hectareas   = parseFloat(document.getElementById('edit_hectareas').value)    || 0;
+    const hectInputEdit = document.getElementById('edit_hectareas');
+    const hectareas   = parseFloat(hectInputEdit.value)    || 0;
     const tipoPasto   = document.getElementById('edit_tipo_pasto').value;
     const tieneMangas = document.getElementById('edit_tiene_mangas').checked;
     const numMangas   = parseInt(document.getElementById('edit_num_mangas').value)      || 0;
@@ -1240,8 +1241,28 @@ function calcularCapacidadEdit() {
     const capTexto    = document.getElementById('edit_capacidad_texto');
     const capMangaT   = document.getElementById('edit_capacidad_manga_texto');
     const capHidden   = document.getElementById('edit_capacidad_max');
-    if (hectareas <= 0 || !tipoPasto) { capTexto.textContent = '--'; capMangaT.textContent = '--'; capHidden.value = 0; return; }
-    const capacidadTotal = Math.floor(hectareas * factores[tipoPasto]);
+
+    if (hectareas <= 0 || !tipoPasto) {
+        capTexto.textContent = '--';
+        capMangaT.textContent = '--';
+        capHidden.value = 0;
+        hectInputEdit.setCustomValidity('');
+        return;
+    }
+
+    const capacidadCalculada = Math.floor(hectareas * factores[tipoPasto]);
+
+    if (capacidadCalculada < 1) {
+        capTexto.textContent = 'Hectáreas insuficientes para este tipo de pasto';
+        capMangaT.textContent = '--';
+        capHidden.value = 0;
+        hectInputEdit.setCustomValidity('Las hectáreas ingresadas no alcanzan para este tipo de pasto. Aumenta las hectáreas o elige otro tipo de pasto.');
+        hectInputEdit.reportValidity();
+        return;
+    }
+    hectInputEdit.setCustomValidity('');
+
+    const capacidadTotal = Math.max(1, capacidadCalculada);
     capTexto.textContent = capacidadTotal + ' vacas';
     capHidden.value      = capacidadTotal;
     if (tieneMangas && numMangas > 0 && tamMangaM2 > 0) {
@@ -1254,6 +1275,12 @@ function calcularCapacidadEdit() {
 
 document.getElementById('edit_tiene_mangas').addEventListener('change', function() {
     document.getElementById('edit_grupo_mangas').style.display = this.checked ? 'block' : 'none';
+    const editNumMangas = document.getElementById('edit_num_mangas');
+    if (this.checked) {
+        editNumMangas.setAttribute('required', 'required');
+    } else {
+        editNumMangas.removeAttribute('required');
+    }
     calcularCapacidadEdit();
 });
 ['edit_hectareas','edit_tipo_pasto','edit_num_mangas','edit_tamaño_manga'].forEach(id => {
@@ -1335,8 +1362,28 @@ function calcularCapacidad() {
     const tieneMangas = chkMangas.checked;
     const numMangas   = parseInt(numMInput.value)     || 0;
     const tamMangaM2  = parseFloat(tamMInput.value)   || 0;
-    if (hectareas <= 0 || !tipoPasto) { capTexto.textContent = '--'; capManga.textContent = '--'; capHidden.value = 0; return; }
-    const capacidadTotal = Math.floor(hectareas * factores[tipoPasto]);
+
+    if (hectareas <= 0 || !tipoPasto) {
+        capTexto.textContent = '--';
+        capManga.textContent = '--';
+        capHidden.value = 0;
+        hectInput.setCustomValidity('');
+        return;
+    }
+
+    const capacidadCalculada = Math.floor(hectareas * factores[tipoPasto]);
+
+    if (capacidadCalculada < 1) {
+        capTexto.textContent = 'Hectáreas insuficientes para este tipo de pasto';
+        capManga.textContent = '--';
+        capHidden.value = 0;
+        hectInput.setCustomValidity('Las hectáreas ingresadas no alcanzan para este tipo de pasto. Aumenta las hectáreas o elige otro tipo de pasto.');
+        hectInput.reportValidity();
+        return;
+    }
+    hectInput.setCustomValidity('');
+
+    const capacidadTotal = Math.max(1, capacidadCalculada);
     capTexto.textContent = capacidadTotal + ' vacas';
     capHidden.value      = capacidadTotal;
     if (tieneMangas && numMangas > 0 && tamMangaM2 > 0) {
@@ -1351,7 +1398,14 @@ function calcularCapacidad() {
 
 chkMangas.addEventListener('change', function() {
     grupoMangas.style.display = this.checked ? 'block' : 'none';
-    if (!this.checked) { numMInput.value = ''; tamMInput.value = ''; capManga.textContent = '--'; }
+    if (this.checked) {
+        numMInput.setAttribute('required', 'required');
+    } else {
+        numMInput.removeAttribute('required');
+        numMInput.value = '';
+        tamMInput.value = '';
+        capManga.textContent = '--';
+    }
     calcularCapacidad();
 });
 ['hectareas','tipo_pasto','num_mangas','tamaño_manga'].forEach(id => {
