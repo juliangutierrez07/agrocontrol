@@ -84,14 +84,14 @@ function send_security_headers(): void
     // - Scripts propios + CDN de Chart.js + inline (requerido por bloques <script> inline en vistas)
     // - Estilos propios + Google Fonts + inline (requerido por potrero.php con <style> embebido)
     // - Fuentes de Google Fonts
-    // - Imágenes propias + data URIs (avatares SVG inline)
+    // - Imágenes propias + data URIs (avatares SVG inline) + fondo de Unsplash (Login/iniciarsesion.css)
     // - Sin frame-ancestors (refuerza X-Frame-Options)
     $csp = implode('; ', [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data:",
+        "img-src 'self' data: https://images.unsplash.com",
         "connect-src 'self'",
         "frame-ancestors 'none'",
         "base-uri 'self'",

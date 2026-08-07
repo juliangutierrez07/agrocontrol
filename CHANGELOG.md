@@ -9,10 +9,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/).
 
 ### Pendiente
 - Rate limiting en formulario de login (protección fuerza bruta)
-- Cabeceras HTTP de seguridad (CSP, X-Frame-Options, HSTS)
 - Paginación server-side en tablas de listado
 - Tabla de roles y permisos granulares en BD
 - 2FA para cuentas de administrador
+- HSTS (`Strict-Transport-Security`) — pendiente hasta activar HTTPS en producción (Dokploy)
+- Refactor de JS/onclick inline a archivos externos + `addEventListener`, para poder retirar `'unsafe-inline'` de `script-src` en el CSP
+
+---
+
+## [1.2.0] — 2026-08-06
+
+### Seguridad
+- **MEDIO** Cabeceras HTTP de seguridad (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Content-Security-Policy`) ya estaban implementadas en `Config/helpers.php::send_security_headers()` para toda página autenticada, pero `Pages/vacunaciones.html` (estático) y `Pages/Home.php` (landing pública sin `require` de `Config/`) quedaban sin cubrir. Se agregó `.htaccess` con la misma política vía `mod_headers` para cerrar ese hueco.
+- Corregido bug en el CSP de `Config/helpers.php`: `img-src` no incluía `https://images.unsplash.com`, bloqueando la imagen de fondo del login.
+- `Dockerfile`: habilitado `mod_headers` (`a2enmod headers`) para que el `.htaccess` también aplique en producción (Dokploy).
 
 ---
 

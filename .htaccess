@@ -1,0 +1,36 @@
+# Cabeceras HTTP de seguridad.
+#
+# Las páginas PHP ya reciben el juego completo de cabeceras (incluido el CSP)
+# desde Config/helpers.php::send_security_headers(), invocada por
+# start_secure_session() en cada request autenticado. Repetirlas aquí de forma
+# global duplicaría el header Content-Security-Policy y el navegador aplicaría
+# la INTERSECCIÓN de ambas políticas — con alto riesgo de bloquear recursos
+# legítimos si las dos políticas llegan a divergir (ya pasó: una tenía el
+# dominio de Unsplash del login y la otra no).
+#
+# Por eso aquí solo cubrimos las páginas que NUNCA pasan por
+# send_security_headers(): Pages/vacunaciones.html (estático, no ejecuta PHP)
+# y Pages/Home.php (landing pública que no incluye Config/helpers.php).
+<IfModule mod_headers.c>
+    <FilesMatch "^(vacunaciones\.html|Home\.php)$">
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-Frame-Options "SAMEORIGIN"
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Mismo criterio que Config/helpers.php: 'unsafe-inline' en script-src
+        # porque vacunaciones.html tiene <script> inline y genera atributos
+        # onclick dinámicamente en tiempo de ejecución (template strings JS).
+        # Ver SECURITY.md para el detalle de esta deuda técnica.
+        Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    </FilesMatch>
+
+    # nosniff es seguro e inocuo en cualquier respuesta (no genera conflicto
+    # de intersección como el CSP), así que se aplica también a CSS/JS/imágenes
+    # estáticas que hoy no llevan ninguna cabecera de seguridad.
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# HSTS deliberadamente NO se activa aquí: el proyecto corre en local sobre
+# HTTP y en producción (Dokploy) aún no tiene HTTPS configurado. Activarla
+# sin HTTPS puede dejar el sitio inaccesible. Ver SECURITY.md / CHANGELOG.md.

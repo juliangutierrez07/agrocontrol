@@ -6,6 +6,9 @@ RUN docker-php-ext-install mysqli
 # Habilita mod_rewrite por si usas URLs amigables
 RUN a2enmod rewrite
 
+# Habilita mod_headers, requerido para las cabeceras de seguridad del .htaccess
+RUN a2enmod headers
+
 # Copia todo el proyecto al directorio raíz de Apache
 COPY . /var/www/html/
 
