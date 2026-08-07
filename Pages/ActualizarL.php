@@ -29,7 +29,7 @@ try {
     $toast = ['type' => 'success', 'message' => 'Registro actualizado correctamente'];
     if ($vaca && $registroPrevio && (float)$registroPrevio['litros'] > 0) {
         $litrosPrevios = (float)$registroPrevio['litros'];
-        $caidaPorcentual = (($litrosPrevios - $litros) / $litrosPrevios) * 100;
+        $caidaPorcentual = calcular_caida_produccion($litrosPrevios, $litros);
         if ($caidaPorcentual >= 8) {
             $toast = [
                 'type' => 'alert',

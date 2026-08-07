@@ -53,28 +53,26 @@ jobs:
           echo "Sin coincidencias de patrones de secretos conocidos."
 
   # ─────────────────────────────────────────────────────────────────
-  # PHPUnit — DESACTIVADO por ahora.
-  # El proyecto todavía no tiene composer.json ni PHPUnit como dependencia
-  # (se agregará en una tarea aparte, con más cuidado). Cuando eso exista,
-  # descomenta el job completo de abajo: no hace falta rehacer el workflow,
-  # solo quitar el comentario.
+  # PHPUnit — activado. composer.json ya declara phpunit/phpunit ^10.5
+  # (ultima rama de PHPUnit compatible con PHP 8.1) como dependencia de
+  # desarrollo, y tests/ tiene la suite inicial (ver tests/Unit/).
   # ─────────────────────────────────────────────────────────────────
-  # phpunit:
-  #   name: Ejecutar tests (PHPUnit)
-  #   runs-on: ubuntu-latest
-  #   needs: php-lint
-  #   steps:
-  #     - name: Checkout del repositorio
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Configurar PHP 8.1
-  #       uses: shivammathur/setup-php@v2
-  #       with:
-  #         php-version: "8.1"
-  #         coverage: none
-  #
-  #     - name: Instalar dependencias de Composer
-  #       run: composer install --prefer-dist --no-progress
-  #
-  #     - name: Ejecutar PHPUnit
-  #       run: vendor/bin/phpunit
+  phpunit:
+    name: Ejecutar tests (PHPUnit)
+    runs-on: ubuntu-latest
+    needs: php-lint
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          coverage: none
+
+      - name: Instalar dependencias de Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Ejecutar PHPUnit
+        run: vendor/bin/phpunit

@@ -63,8 +63,7 @@ if (!empty($registros)) {
 
     foreach ($registros as $registro) {
         $fechaRegistro = new DateTime($registro['fecha']);
-        $dias = (int) $fechaInicioControl->diff($fechaRegistro)->format('%a');
-        $indicePeriodo = (int) floor($dias / 15);
+        $indicePeriodo = indice_quincena($fechaInicioControl, $fechaRegistro);
 
         if (!isset($quincenas[$indicePeriodo])) {
             continue;

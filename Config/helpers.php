@@ -289,6 +289,41 @@ function input_date(array $source, string $key): string
     return $value;
 }
 
+// ─────────────────────────────────────────────────────────────
+// LÓGICA DE NEGOCIO EXTRAÍDA PARA PRUEBAS UNITARIAS
+// Funciones puras (sin BD/sesión), antes duplicadas o mezcladas
+// inline en Pages/. Ver tests/Unit/.
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Estados válidos para una vaca. Antes declarada como array literal
+ * repetido en CrearV.php, Registro_Vacas.php y editar.php.
+ */
+function estado_vaca_valido(string $estado): bool
+{
+    return in_array($estado, ['produccion', 'secado', 'enrazada'], true);
+}
+
+/**
+ * Porcentaje de caída entre el litraje previo y el actual.
+ * Antes duplicada de forma idéntica en crearL.php y ActualizarL.php.
+ * El umbral de alerta (>= 8) sigue decidiéndose en cada controlador.
+ */
+function calcular_caida_produccion(float $litrosPrevios, float $litrosActuales): float
+{
+    return $litrosPrevios > 0 ? (($litrosPrevios - $litrosActuales) / $litrosPrevios) * 100 : 0.0;
+}
+
+/**
+ * Índice (0-based) de la quincena de 15 días en la que cae $fecha,
+ * contando desde $fechaInicio. Antes inline en historial_quincenas_leche.php.
+ */
+function indice_quincena(DateTime $fechaInicio, DateTime $fecha): int
+{
+    $dias = (int) $fechaInicio->diff($fecha)->format('%a');
+    return (int) floor($dias / 15);
+}
+
 function db_prepare(mysqli $con, string $sql, string $types = '', array $params = []): mysqli_stmt
 {
     $stmt = mysqli_prepare($con, $sql);

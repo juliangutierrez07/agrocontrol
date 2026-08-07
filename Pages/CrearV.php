@@ -10,9 +10,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $nombre = input_string($_POST, 'nombre', 100);
         $raza = input_string($_POST, 'raza', 100, false);
         $edad = input_int($_POST, 'edad', 0, 40, false);
-        $estadosPermitidos = ['produccion', 'secado', 'enrazada'];
         $estado = input_string($_POST, 'estado', 40);
-        if (!in_array($estado, $estadosPermitidos, true)) {
+        if (!estado_vaca_valido($estado)) {
             throw new InvalidArgumentException('Estado de vaca no válido.');
         }
         $descripcion = input_string($_POST, 'descripcion', 1000, false);

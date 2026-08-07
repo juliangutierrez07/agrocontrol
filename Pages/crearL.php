@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $toast = ['type' => 'success', 'message' => 'Registro guardado correctamente'];
         if ($registroPrevio && (float)$registroPrevio['litros'] > 0) {
             $litrosPrevios = (float)$registroPrevio['litros'];
-            $caidaPorcentual = (($litrosPrevios - $litros) / $litrosPrevios) * 100;
+            $caidaPorcentual = calcular_caida_produccion($litrosPrevios, $litros);
             if ($caidaPorcentual >= 8) {
                 $toast = [
                     'type' => 'alert',
