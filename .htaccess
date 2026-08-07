@@ -25,10 +25,15 @@
         Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     </FilesMatch>
 
-    # nosniff es seguro e inocuo en cualquier respuesta (no genera conflicto
-    # de intersección como el CSP), así que se aplica también a CSS/JS/imágenes
-    # estáticas que hoy no llevan ninguna cabecera de seguridad.
-    Header always set X-Content-Type-Options "nosniff"
+    # nosniff es seguro e inocuo en cualquier respuesta estática (no genera
+    # conflicto de intersección como el CSP), así que se aplica también a
+    # CSS/JS/imágenes que hoy no llevan ninguna cabecera de seguridad.
+    # Se excluye .php explícitamente: Config/helpers.php ya envía este header
+    # en cada página PHP, y agregarlo también aquí duplicaba
+    # X-Content-Type-Options en la respuesta (confirmado con curl: "nosniff, nosniff").
+    <FilesMatch "^(?!.*\.php$).+$">
+        Header always set X-Content-Type-Options "nosniff"
+    </FilesMatch>
 </IfModule>
 
 # HSTS deliberadamente NO se activa aquí: el proyecto corre en local sobre
