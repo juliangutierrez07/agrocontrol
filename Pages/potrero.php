@@ -497,7 +497,7 @@ $con = conexion();
             </button>
         </div>
         <div class="modal-divider"></div>
-        <form action="ActualizarPotrero.php" method="POST">
+        <form action="Actualizarpotrero.php" method="POST">
             <?= csrf_field() ?>
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-body">
