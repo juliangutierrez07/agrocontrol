@@ -223,14 +223,14 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                                 <button type="button" class="btn-icon-edit"
                                     onclick="abrirModalEditar(
                                         <?php echo (int)$row['id']; ?>,
-                                        <?php echo json_encode($row['nombre']); ?>,
-                                        <?php echo json_encode($row['raza']); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['nombre']), ENT_QUOTES, 'UTF-8'); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['raza']), ENT_QUOTES, 'UTF-8'); ?>,
                                         <?php echo (int)$row['edad']; ?>,
-                                        <?php echo json_encode($row['estado']); ?>,
-                                        <?php echo json_encode($row['descripcion'] ?? ''); ?>,
-                                        <?php echo json_encode($row['vacunas_info'] ?? ''); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['estado']), ENT_QUOTES, 'UTF-8'); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['descripcion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['vacunas_info'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>,
                                         <?php echo (int) ($row['partos'] ?? 0); ?>,
-                                        <?php echo json_encode($row['foto'] ?? ''); ?>
+                                        <?php echo htmlspecialchars(json_encode($row['foto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                                     )">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
                                     Editar

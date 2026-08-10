@@ -258,9 +258,9 @@ if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
                                 <button type="button" class="btn-icon-edit"
                                     onclick="abrirModalEditar(
                                         <?php echo (int)$row['id']; ?>,
-                                        <?php echo json_encode($row['vaca']); ?>,
-                                        <?php echo json_encode($row['fecha']); ?>,
-                                        <?php echo json_encode((string)$row['litros']); ?>
+                                        <?php echo htmlspecialchars(json_encode($row['vaca']), ENT_QUOTES, 'UTF-8'); ?>,
+                                        <?php echo htmlspecialchars(json_encode($row['fecha']), ENT_QUOTES, 'UTF-8'); ?>,
+                                        <?php echo htmlspecialchars(json_encode((string)$row['litros']), ENT_QUOTES, 'UTF-8'); ?>
                                     )">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
                                     Editar

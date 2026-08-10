@@ -195,7 +195,7 @@ $con = conexion();
                     </div>
                     <div class="oc-vaca-actions">
                         <button class="btn-ver"
-                            onclick="abrirHojaVida(<?= (int)$vaca['id'] ?>, <?= json_encode($vaca['nombre']) ?>)">
+                            onclick="abrirHojaVida(<?= (int)$vaca['id'] ?>, <?= htmlspecialchars(json_encode($vaca['nombre']), ENT_QUOTES, 'UTF-8') ?>)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>
@@ -203,7 +203,7 @@ $con = conexion();
                             Ver
                         </button>
                         <button class="btn-mover"
-                            onclick="abrirMover(<?= (int)$vaca['asig_id'] ?>, <?= json_encode($vaca['nombre']) ?>, <?= json_encode($pt['nombre']) ?>, <?= (int)$pt['id'] ?>)">
+                            onclick="abrirMover(<?= (int)$vaca['asig_id'] ?>, <?= htmlspecialchars(json_encode($vaca['nombre']), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars(json_encode($pt['nombre']), ENT_QUOTES, 'UTF-8') ?>, <?= (int)$pt['id'] ?>)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
@@ -318,9 +318,9 @@ $con = conexion();
                             <button class="btn-icon-edit"
                                 onclick="abrirEditar(
                                     <?= (int)$row['id'] ?>,
-                                    <?= json_encode($row['nombre']) ?>,
+                                    <?= htmlspecialchars(json_encode($row['nombre']), ENT_QUOTES, 'UTF-8') ?>,
                                     <?= (float)$row['hectareas'] ?>,
-                                    <?= json_encode($row['tipo_pasto']) ?>,
+                                    <?= htmlspecialchars(json_encode($row['tipo_pasto']), ENT_QUOTES, 'UTF-8') ?>,
                                     <?= (int)$row['tiene_mangas'] ?>,
                                     <?= (int)$row['num_mangas'] ?>,
                                     <?= (float)$row['tamaño_manga'] ?>
