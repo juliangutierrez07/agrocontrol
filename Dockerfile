@@ -24,6 +24,10 @@ RUN echo '<VirtualHost *:80>\n\
         Require all granted\n\
     </Directory>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+# Garantiza que logs/ exista y sea escribible, independientemente de si
+# el volumen montado en runtime la trae vacia o la oculta
+RUN mkdir -p /var/www/html/logs && chmod 775 /var/www/html/logs
+
 # Ajusta permisos (por si tu app escribe archivos, logs, etc.)
 RUN chown -R www-data:www-data /var/www/html
 
