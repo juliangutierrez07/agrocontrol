@@ -2,7 +2,7 @@
 // DIAGNOSTICO TEMPORAL - subir a Pages/ (para reusar Config/conexion.php via ../Config/)
 // y BORRAR del VPS apenas termines de revisarlo. Expone schema real y el log de errores.
 require_once("../Config/conexion.php");
-require_role(['admin']);
+require_role(['administrador']);
 $con = conexion();
 
 header('Content-Type: text/plain; charset=utf-8');
