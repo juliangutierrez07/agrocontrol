@@ -516,10 +516,13 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                 </div>
                 <?php else: ?>
                 <div class="empty-block">
-                    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="empty-icon">
-                        <circle cx="20" cy="20" r="16"/><path d="M20 12v8l5 5"/>
-                    </svg>
-                    <p>Sin vacunas pendientes próximas</p>
+                    <span class="empty-badge empty-badge-neutral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 3.5"/>
+                        </svg>
+                    </span>
+                    <p class="empty-title">Sin vacunas próximas</p>
+                    <span class="empty-sub">No hay vacunaciones pendientes en el calendario.</span>
                     <a href="vacunaciones.html" class="empty-link">Programar vacuna →</a>
                 </div>
                 <?php endif; ?>
@@ -560,11 +563,14 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                 <?php endforeach; ?>
             </div>
             <?php else: ?>
-            <div class="empty-block">
-                <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="empty-icon">
-                    <polyline points="8,28 16,20 22,25 32,12"/>
-                </svg>
-                <p>Sin caídas de producción relevantes</p>
+            <div class="empty-block empty-ok">
+                <span class="empty-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </span>
+                <p class="empty-title">Sin caídas de producción</p>
+                <span class="empty-sub">Todas las vacas mantienen su promedio esperado.</span>
             </div>
             <?php endif; ?>
         </div>
