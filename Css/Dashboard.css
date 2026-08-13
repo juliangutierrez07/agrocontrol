@@ -488,6 +488,7 @@ html.light .icon-sun  { display: block; }
    BUSCADOR — dropdown de resultados
    ════════════════════════════════════════════ */
 .tb-search-wrap { position: relative; }
+.tb-search-results[hidden] { display: none; }
 .tb-search-results {
   position: absolute; top: calc(100% + 8px); left: 0;
   width: 260px; max-height: 320px; overflow-y: auto;
@@ -529,6 +530,7 @@ html.light .icon-sun  { display: block; }
   border: 1.5px solid var(--surface, #101511);
   border-radius: 999px;
 }
+.tb-notify-panel[hidden] { display: none; }
 .tb-notify-panel {
   position: absolute; top: calc(100% + 8px); right: 0;
   width: 320px; max-height: 420px;
