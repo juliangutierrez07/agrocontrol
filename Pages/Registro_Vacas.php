@@ -11,7 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_id'])) {
         require_csrf();
         $id           = input_int($_POST, 'editar_id', 1);
         $nombre       = input_string($_POST, 'nombre', 100);
-        $raza         = input_string($_POST, 'raza', 100, false);
+        // Raza: el modal editar ahora envía un <select>. Si es "otra", el valor
+        // real viene en raza_otra (solo letras, obligatorio). Máx. 50 = vacas.raza.
+        $raza         = input_string($_POST, 'raza', 50);
+        if (strtolower($raza) === 'otra') {
+            $raza = input_solo_letras($_POST, 'raza_otra', 50);
+        }
         $edad         = input_int($_POST, 'edad', 0, 40, false);
         $estado       = input_string($_POST, 'estado', 40);
         if (!estado_vaca_valido($estado)) {
@@ -456,7 +461,20 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
 
                     <div class="field">
                         <label class="field-label">Raza</label>
-                        <input type="text" name="raza" id="editar_raza" required>
+                        <select name="raza" id="editar_raza" required>
+                            <option value="Holstein">Holstein</option>
+                            <option value="Jersey">Jersey</option>
+                            <option value="Pardo Suizo">Pardo Suizo</option>
+                            <option value="Normando">Normando</option>
+                            <option value="Gyr">Gyr</option>
+                            <option value="Girolando">Girolando</option>
+                            <option value="Simmental">Simmental</option>
+                            <option value="Ayrshire">Ayrshire</option>
+                            <option value="Criollo (BON/Romosinuano)">Criollo (BON/Romosinuano)</option>
+                            <option value="otra">Otra (especificar)</option>
+                        </select>
+                        <input type="text" name="raza_otra" id="editar_raza_otra" class="raza-otra-input"
+                               placeholder="Especifica la raza" maxlength="50" autocomplete="off" hidden>
                     </div>
 
                     <div class="field-row-2">
@@ -516,7 +534,7 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
             // Llenar campos
             document.getElementById('editar_id').value      = id;
             document.getElementById('editar_nombre').value  = nombre;
-            document.getElementById('editar_raza').value    = raza;
+            setEditarRaza(raza);
             document.getElementById('editar_edad').value    = edad;
             document.getElementById('editar_estado').value  = estado;
             document.getElementById('editar_descripcion').value = descripcion;
@@ -532,6 +550,43 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
             document.getElementById('modalEditarOverlay').classList.add('activo');
             document.body.style.overflow = 'hidden';
         }
+
+        // Preselecciona la raza en el <select> del modal editar. Si el valor
+        // guardado no coincide con ninguna opción (razas libres antiguas),
+        // selecciona "Otra" y lo coloca en el input editable.
+        function setEditarRaza(raza) {
+            var sel  = document.getElementById('editar_raza');
+            var otra = document.getElementById('editar_raza_otra');
+            if (!sel) { return; }
+            var val = (raza == null ? '' : String(raza)).trim();
+            var existe = Array.prototype.some.call(sel.options, function(o) {
+                return o.value !== 'otra' && o.value === val;
+            });
+            if (existe) {
+                sel.value = val;
+                if (otra) { otra.hidden = true; otra.required = false; otra.value = ''; }
+            } else {
+                sel.value = 'otra';
+                if (otra) { otra.hidden = false; otra.required = true; otra.value = val; }
+            }
+        }
+
+        // Toggle del input "Otra" + filtro de solo letras (igual que el modal crear).
+        (function() {
+            var sel  = document.getElementById('editar_raza');
+            var otra = document.getElementById('editar_raza_otra');
+            if (!sel || !otra) { return; }
+            sel.addEventListener('change', function() {
+                var esOtra = sel.value === 'otra';
+                otra.hidden = !esOtra;
+                otra.required = esOtra;
+                if (esOtra) { otra.focus(); } else { otra.value = ''; }
+            });
+            otra.addEventListener('input', function() {
+                var v = otra.value.replace(/[^\p{L}\p{M} ]/gu, '').slice(0, 50);
+                if (v !== otra.value) { otra.value = v; }
+            });
+        })();
 
         // Cerrar modal editar
         function cerrarModalEditar() {
