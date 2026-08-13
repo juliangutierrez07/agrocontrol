@@ -114,8 +114,13 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../Css/layout-base.css">
-<link rel="stylesheet" href="../Css/Dashboard.css">
+<?php
+  // Cache-busting: fuerza al navegador a recargar el CSS tras cada despliegue.
+  $vBase = @filemtime(__DIR__ . '/../Css/layout-base.css') ?: time();
+  $vDash = @filemtime(__DIR__ . '/../Css/Dashboard.css') ?: time();
+?>
+<link rel="stylesheet" href="../Css/layout-base.css?v=<?php echo $vBase; ?>">
+<link rel="stylesheet" href="../Css/Dashboard.css?v=<?php echo $vDash; ?>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -204,10 +209,10 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                     <?php endif; ?>
                 </button>
 
-                <div class="tb-notify-panel" id="notifPanel" role="menu" aria-label="Notificaciones" hidden>
+                <div class="tb-notify-panel" id="notifPanel" role="menu" aria-label="Centro de notificaciones" hidden>
                     <div class="tb-notify-head">
-                        <span class="tb-notify-title">Notificaciones</span>
-                        <span class="tb-notify-count"><?php echo $notifTotal; ?></span>
+                        <span class="tb-notify-title">Centro de notificaciones</span>
+                        <span class="tb-notify-subtitle">Últimas alertas y actividad</span>
                     </div>
                     <div class="tb-notify-body">
                         <?php if ($notifTotal === 0): ?>
@@ -229,16 +234,19 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                                 </span>
                                 <span class="tb-ni-copy">
                                     <span class="tb-ni-title">Caída de producción · <?php echo e($a['nombre']); ?></span>
-                                    <span class="tb-ni-sub">Bajó <?php echo $a['caida_pct']; ?>% respecto a su promedio</span>
+                                    <span class="tb-ni-sub">Bajó <?php echo $a['caida_pct']; ?>% respecto a su promedio diario.</span>
+                                    <span class="tb-ni-time">Producción lechera</span>
                                 </span>
-                                <span class="tb-ni-tag tb-ni-tag-warn">-<?php echo $a['caida_pct']; ?>%</span>
+                                <svg class="tb-ni-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="9,6 15,12 9,18"/>
+                                </svg>
                             </a>
                             <?php endforeach; ?>
                             <?php foreach ($proximasVacunas as $v):
                                 $d = (int)$v['dias_restantes'];
-                                if ($d === 0)     { $txt = 'Hoy';    $tagcls = 'tb-ni-tag-red'; }
-                                elseif ($d === 1) { $txt = 'Mañana'; $tagcls = 'tb-ni-tag-amber'; }
-                                else              { $txt = "{$d}d";  $tagcls = 'tb-ni-tag-green'; }
+                                if ($d === 0)     { $cuando = 'Programada para hoy'; }
+                                elseif ($d === 1) { $cuando = 'Programada para mañana'; }
+                                else              { $cuando = "En {$d} días"; }
                             ?>
                             <a class="tb-notify-item" href="vacunaciones.html" role="menuitem">
                                 <span class="tb-ni-icon tb-ni-vac" aria-hidden="true">
@@ -247,15 +255,18 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                                     </svg>
                                 </span>
                                 <span class="tb-ni-copy">
-                                    <span class="tb-ni-title">Vacuna · <?php echo e($v['nombre_vaca']); ?></span>
+                                    <span class="tb-ni-title">Vacuna pendiente · <?php echo e($v['nombre_vaca']); ?></span>
                                     <span class="tb-ni-sub"><?php echo e($v['tipo_vacuna']); ?> · <?php echo date('d/m/Y', strtotime($v['fecha_programada'])); ?></span>
+                                    <span class="tb-ni-time"><?php echo $cuando; ?></span>
                                 </span>
-                                <span class="tb-ni-tag <?php echo $tagcls; ?>"><?php echo $txt; ?></span>
+                                <svg class="tb-ni-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="9,6 15,12 9,18"/>
+                                </svg>
                             </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
-                    <a class="tb-notify-foot" href="vacunaciones.html">Ver todas las vacunaciones →</a>
+                    <a class="tb-notify-foot" href="vacunaciones.html">Ver todas las notificaciones</a>
                 </div>
             </div>
 
