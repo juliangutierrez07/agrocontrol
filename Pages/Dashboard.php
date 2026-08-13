@@ -266,7 +266,6 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
-                    <a class="tb-notify-foot" href="vacunaciones.html">Ver todas las notificaciones</a>
                 </div>
             </div>
 
