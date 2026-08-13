@@ -289,6 +289,34 @@ function input_date(array $source, string $key): string
     return $value;
 }
 
+/**
+ * Cadena que solo admite dígitos (0-9). Para campos numéricos guardados como
+ * texto, como el código de vaca (en la tabla se almacena con cero a la
+ * izquierda: "01", "02"...). Mantiene el formato original, no castea a int.
+ */
+function input_solo_digitos(array $source, string $key, int $max = 15, bool $required = true): string
+{
+    $value = input_string($source, $key, $max, $required);
+    if ($value !== '' && !ctype_digit($value)) {
+        throw new InvalidArgumentException("El campo $key solo admite números.");
+    }
+    return $value;
+}
+
+/**
+ * Cadena que solo admite letras (incluye tildes y ñ mediante \p{L}) y
+ * espacios. Para nombres propios y razas escritas manualmente. Rechaza
+ * dígitos y símbolos.
+ */
+function input_solo_letras(array $source, string $key, int $max = 50, bool $required = true): string
+{
+    $value = input_string($source, $key, $max, $required);
+    if ($value !== '' && !preg_match('/^[\p{L}\p{M} ]+$/u', $value)) {
+        throw new InvalidArgumentException("El campo $key solo admite letras y espacios.");
+    }
+    return $value;
+}
+
 // ─────────────────────────────────────────────────────────────
 // LÓGICA DE NEGOCIO EXTRAÍDA PARA PRUEBAS UNITARIAS
 // Funciones puras (sin BD/sesión), antes duplicadas o mezcladas

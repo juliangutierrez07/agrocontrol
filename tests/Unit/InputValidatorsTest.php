@@ -153,4 +153,47 @@ final class InputValidatorsTest extends TestCase
             'texto arbitrario' => ['no-es-fecha'],
         ];
     }
+
+    public function testInputSoloDigitosAceptaNumerosYConservaCeros(): void
+    {
+        $this->assertSame('01', input_solo_digitos(['codigo' => ' 01 '], 'codigo', 15));
+        $this->assertSame('100', input_solo_digitos(['codigo' => '100'], 'codigo', 15));
+    }
+
+    /** @dataProvider digitosInvalidos */
+    public function testInputSoloDigitosRechazaNoNumericos(array $source, bool $required): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        input_solo_digitos($source, 'codigo', 15, $required);
+    }
+
+    public static function digitosInvalidos(): array
+    {
+        return [
+            'con letra' => [['codigo' => '01a'], true],
+            'con simbolo' => [['codigo' => '0-1'], true],
+            'obligatorio vacio' => [['codigo' => ''], true],
+        ];
+    }
+
+    public function testInputSoloLetrasAceptaTildesYEnie(): void
+    {
+        $this->assertSame('Pepita Ñoña', input_solo_letras(['nombre' => '  Pepita Ñoña  '], 'nombre', 50));
+    }
+
+    /** @dataProvider letrasInvalidas */
+    public function testInputSoloLetrasRechazaDigitosYSimbolos(array $source, bool $required): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        input_solo_letras($source, 'nombre', 50, $required);
+    }
+
+    public static function letrasInvalidas(): array
+    {
+        return [
+            'con digito' => [['nombre' => 'Pep1ta'], true],
+            'con simbolo' => [['nombre' => 'Roja@'], true],
+            'obligatorio vacio' => [['nombre' => ''], true],
+        ];
+    }
 }

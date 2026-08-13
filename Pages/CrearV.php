@@ -6,19 +6,23 @@ $con = conexion();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     try {
-        $codigo = input_string($_POST, 'codigo', 15);
-        $nombre = input_string($_POST, 'nombre', 50);
+        // Código: solo dígitos (formato de la tabla: numérico, cero a la
+        // izquierda), máx. 15 = vacas.codigo.
+        $codigo = input_solo_digitos($_POST, 'codigo', 15);
+        // Nombre: solo letras (con tildes/ñ) y espacios, máx. 50 = vacas.nombre.
+        $nombre = input_solo_letras($_POST, 'nombre', 50);
         // Raza: el modal envía un <select>. Si es "otra", el valor real viene
-        // en raza_otra (obligatorio en ese caso). Se limita a 50 = vacas.raza.
+        // en raza_otra (solo letras, obligatorio). Se limita a 50 = vacas.raza.
         $raza = input_string($_POST, 'raza', 50);
         if (strtolower($raza) === 'otra') {
-            $raza = input_string($_POST, 'raza_otra', 50);
+            $raza = input_solo_letras($_POST, 'raza_otra', 50);
         }
-        $edad = input_int($_POST, 'edad', 0, 40, false);
+        $edad = input_int($_POST, 'edad', 0, 25, false);
         $estado = input_string($_POST, 'estado', 40);
         if (!estado_vaca_valido($estado)) {
             throw new InvalidArgumentException('Estado de vaca no válido.');
         }
+        // Descripción y vacunas: texto libre, se escapa con e() en la salida.
         $descripcion = input_string($_POST, 'descripcion', 1000, false);
         $vacunasInfo = input_string($_POST, 'vacunas_info', 1000, false);
         $partos = input_int($_POST, 'partos', 0, 30, false);

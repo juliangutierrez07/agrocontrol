@@ -56,6 +56,8 @@
 - `input_float()` — filtro `FILTER_VALIDATE_FLOAT`, rango min/max
 - `input_date()` — formato `Y-m-d` verificado con `DateTime::createFromFormat`
 - `input_email()` — `FILTER_VALIDATE_EMAIL`
+- `input_solo_digitos()` — solo dígitos `0-9` (p. ej. código de vaca), conserva ceros a la izquierda
+- `input_solo_letras()` — solo letras (con tildes/ñ vía `\p{L}`) y espacios (nombres, razas)
 - Whitelist en campos de estado de vaca: `['produccion', 'secado', 'enrazada']`
 
 ### Cabeceras HTTP de seguridad
