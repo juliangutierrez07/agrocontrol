@@ -6,9 +6,14 @@ $con = conexion();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     try {
-        $codigo = input_string($_POST, 'codigo', 50);
-        $nombre = input_string($_POST, 'nombre', 100);
-        $raza = input_string($_POST, 'raza', 100, false);
+        $codigo = input_string($_POST, 'codigo', 15);
+        $nombre = input_string($_POST, 'nombre', 50);
+        // Raza: el modal envía un <select>. Si es "otra", el valor real viene
+        // en raza_otra (obligatorio en ese caso). Se limita a 50 = vacas.raza.
+        $raza = input_string($_POST, 'raza', 50);
+        if (strtolower($raza) === 'otra') {
+            $raza = input_string($_POST, 'raza_otra', 50);
+        }
         $edad = input_int($_POST, 'edad', 0, 40, false);
         $estado = input_string($_POST, 'estado', 40);
         if (!estado_vaca_valido($estado)) {
@@ -19,6 +24,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $partos = input_int($_POST, 'partos', 0, 30, false);
         $usuarioId = current_user_id();
 
+        // Rechazo server-side de código duplicado (por usuario). No se confía
+        // solo en la validación JS del modal; este es el guard autoritativo.
         $existe = db_value($con, "SELECT id FROM vacas WHERE codigo = ? AND usuario_id = ? LIMIT 1", "si", [$codigo, $usuarioId]);
         if ($existe) {
             header("Location: Registro_Vacas.php?error=codigo_existente");
