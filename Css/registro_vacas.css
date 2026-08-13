@@ -541,6 +541,24 @@ tbody td:last-child { text-align: right; }
   min-height: 60px;
   line-height: 1.45;
 }
+/* Estado de error de campo (reutiliza la paleta danger del proyecto) */
+.contenedorModal1 input.input-error,
+.contenedorModal1 select.input-error {
+  border-color: var(--danger-border);
+  box-shadow: 0 0 0 3px var(--danger-dim);
+}
+.contenedorModal1 input.input-error:focus,
+.contenedorModal1 select.input-error:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-dim);
+}
+.field-error-msg {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--danger-text);
+  margin-top: 1px; line-height: 1.3;
+}
+.field-error-msg[hidden] { display: none; }
+.field-error-msg svg { width: 12px; height: 12px; flex-shrink: 0; }
 /* Input de archivo legible dentro de columna estrecha */
 .contenedorModal1 .field-file {
   padding: 7px 10px; font-size: 12px; cursor: pointer;

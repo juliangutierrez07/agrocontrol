@@ -289,7 +289,13 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                     <div class="field-row-2">
                         <div class="field">
                             <label class="field-label">Código <span class="field-req">*</span></label>
-                            <input type="text" name="codigo" placeholder="Ej. 06" required>
+                            <input type="text" name="codigo" id="codigoInput" placeholder="Ej. 06"
+                                   list="codigosSugeridos" autocomplete="off" required>
+                            <datalist id="codigosSugeridos"></datalist>
+                            <span class="field-error-msg" id="codigoError" hidden>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Ya existe una vaca con ese código.
+                            </span>
                         </div>
                         <div class="field">
                             <label class="field-label">Edad (años)</label>

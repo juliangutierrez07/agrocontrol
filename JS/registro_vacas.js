@@ -8,6 +8,10 @@
 /* ── MODAL (funciones originales conservadas) ── */
 function abrirModal() {
     document.getElementById('modalOverlay').classList.add('activo');
+    // Refrescar códigos usados/sugeridos al abrir (si la función ya está definida).
+    if (typeof cargarCodigosVaca === 'function') {
+        cargarCodigosVaca();
+    }
 }
 
 function cerrarModal() {
@@ -43,11 +47,71 @@ function selEstado(valor) {
     });
 }
 
-/* ── VALIDACIÓN: asegurar que se seleccionó un estado antes de enviar ── */
+/* ── AUTOCOMPLETADO + VALIDACIÓN DE CÓDIGO ──
+   Consulta getCodigosVaca.php (códigos del usuario) para:
+   - llenar el <datalist> con las sugerencias
+   - validar en vivo que el código no esté ya en uso
+   Los códigos son únicos por usuario; el backend re-valida igualmente. */
+var _codigosUsados = new Set();
+
+function _normCodigo(v) {
+    return String(v == null ? '' : v).trim().toLowerCase();
+}
+
+function cargarCodigosVaca() {
+    fetch('getCodigosVaca.php', { headers: { 'X-Requested-With': 'fetch' } })
+        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function(data) {
+            _codigosUsados = new Set((data.usados || []).map(_normCodigo));
+            var dl = document.getElementById('codigosSugeridos');
+            if (dl) {
+                dl.innerHTML = (data.sugeridos || [])
+                    .map(function(c) { return '<option value="' + _escapeHtml(c) + '"></option>'; })
+                    .join('');
+            }
+            validarCodigoVaca();
+        })
+        .catch(function() { /* silencioso: la validación backend sigue protegiendo */ });
+}
+
+/* Devuelve true si el código es válido (no duplicado). Pinta el estado de error. */
+function validarCodigoVaca() {
+    var input = document.getElementById('codigoInput');
+    var error = document.getElementById('codigoError');
+    if (!input) { return true; }
+    var val = _normCodigo(input.value);
+    var duplicado = val !== '' && _codigosUsados.has(val);
+    input.classList.toggle('input-error', duplicado);
+    if (error) { error.hidden = !duplicado; }
+    return !duplicado;
+}
+
+(function() {
+    var input = document.getElementById('codigoInput');
+    if (input) {
+        input.addEventListener('input', validarCodigoVaca);
+    }
+    // Cargar al iniciar y cada vez que se abre el modal (datos frescos).
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cargarCodigosVaca);
+    } else {
+        cargarCodigosVaca();
+    }
+})();
+
+/* ── VALIDACIÓN: estado seleccionado + código no duplicado antes de enviar ── */
 (function() {
     var form = document.querySelector('.contenedorModal1 form');
     if (form) {
         form.addEventListener('submit', function(e) {
+            // Código en uso: no permitir el envío.
+            if (!validarCodigoVaca()) {
+                e.preventDefault();
+                var input = document.getElementById('codigoInput');
+                if (input) { input.focus(); }
+                mostrarToast('Ya existe una vaca con ese código. Usa uno diferente.', 'error');
+                return;
+            }
             var estado = document.getElementById('estadoHidden').value;
             if (!estado) {
                 e.preventDefault();
