@@ -123,6 +123,62 @@ function validarCodigoVaca() {
     sel.addEventListener('change', toggleRazaOtra);
 })();
 
+/* ── FILTRADO DE CARACTERES EN VIVO POR CAMPO ──
+   Impide teclear caracteres no permitidos mientras el usuario escribe
+   (evento 'input') y muestra un aviso breve bajo el campo. Es una ayuda de
+   UX: el backend (helpers.php: input_solo_digitos / input_solo_letras)
+   revalida cada campo antes de insertar, nunca se confía solo en esto. */
+(function() {
+    var modal = document.querySelector('.contenedorModal1');
+    if (!modal) { return; }
+
+    var SOLO_LETRAS  = /[^\p{L}\p{M} ]/gu; // deja letras (con tildes/ñ) y espacios
+    var SOLO_DIGITOS = /[^0-9]/g;          // deja solo dígitos
+
+    var reglas = [
+        { name: 'codigo',       filtro: SOLO_DIGITOS, max: 15,   msg: 'Solo se permiten números.' },
+        { name: 'edad',         filtro: SOLO_DIGITOS, max: 2, maxVal: 25, msg: 'Solo números (0–25).' },
+        { name: 'partos',       filtro: SOLO_DIGITOS, max: 2, maxVal: 30, msg: 'Solo números (0–30).' },
+        { name: 'nombre',       filtro: SOLO_LETRAS,  max: 50,   msg: 'Solo letras y espacios.' },
+        { name: 'raza_otra',    filtro: SOLO_LETRAS,  max: 50,   msg: 'Solo letras y espacios.' },
+        { name: 'descripcion',  filtro: null,         max: 1000, msg: 'Máximo 1000 caracteres.' },
+        { name: 'vacunas_info', filtro: null,         max: 1000, msg: 'Máximo 1000 caracteres.' }
+    ];
+
+    reglas.forEach(function(r) {
+        var el = modal.querySelector('[name="' + r.name + '"]');
+        if (!el) { return; }
+
+        var hint = document.createElement('span');
+        hint.className = 'field-hint';
+        hint.hidden = true;
+        el.insertAdjacentElement('afterend', hint);
+
+        var timer = null;
+        el.addEventListener('input', function() {
+            var original = el.value;
+            var v = original;
+            if (r.filtro) { v = v.replace(r.filtro, ''); }
+            if (r.max && v.length > r.max) { v = v.slice(0, r.max); }
+            if (r.maxVal != null && v !== '') {
+                var n = parseInt(v, 10);
+                if (!isNaN(n) && n > r.maxVal) { v = String(r.maxVal); }
+            }
+            if (v !== original) {
+                el.value = v;
+                hint.textContent = r.msg;
+                hint.hidden = false;
+                clearTimeout(timer);
+                timer = setTimeout(function() { hint.hidden = true; }, 1800);
+            }
+            // El código, además del filtro, revalida duplicados.
+            if (r.name === 'codigo' && typeof validarCodigoVaca === 'function') {
+                validarCodigoVaca();
+            }
+        });
+    });
+})();
+
 /* ── VALIDACIÓN: estado seleccionado + código no duplicado antes de enviar ── */
 (function() {
     var form = document.querySelector('.contenedorModal1 form');

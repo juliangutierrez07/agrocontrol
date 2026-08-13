@@ -562,6 +562,12 @@ tbody td:last-child { text-align: right; }
 /* Input condicional cuando la raza es "Otra" */
 .contenedorModal1 .raza-otra-input { margin-top: 7px; }
 .contenedorModal1 .raza-otra-input[hidden] { display: none; }
+/* Aviso breve de carácter no permitido (filtrado en vivo) */
+.contenedorModal1 .field-hint {
+  display: block; font-size: 10.5px; color: var(--danger-text);
+  margin-top: 3px; line-height: 1.3;
+}
+.contenedorModal1 .field-hint[hidden] { display: none; }
 /* Input de archivo legible dentro de columna estrecha */
 .contenedorModal1 .field-file {
   padding: 7px 10px; font-size: 12px; cursor: pointer;

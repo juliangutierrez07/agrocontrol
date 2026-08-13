@@ -299,7 +299,7 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                         </div>
                         <div class="field">
                             <label class="field-label">Edad (años)</label>
-                            <input type="number" name="edad" placeholder="Opcional" min="0" max="30">
+                            <input type="text" name="edad" inputmode="numeric" placeholder="Opcional" maxlength="2" autocomplete="off">
                         </div>
                     </div>
 
@@ -335,7 +335,7 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                         </div>
                         <div class="field">
                             <label class="field-label">Partos</label>
-                            <input type="number" name="partos" placeholder="Ej. 2" min="0" max="30" value="0">
+                            <input type="text" name="partos" inputmode="numeric" placeholder="Ej. 2" maxlength="2" value="0" autocomplete="off">
                         </div>
                     </div>
 
