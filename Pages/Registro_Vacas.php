@@ -297,20 +297,21 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                         </div>
                     </div>
 
-                    <div class="field">
-                        <label class="field-label">Nombre del animal <span class="field-req">*</span></label>
-                        <input type="text" name="nombre" placeholder="Ej. Pepita, La Roja…" required>
-                    </div>
-
-                    <div class="field">
-                        <label class="field-label">Raza <span class="field-req">*</span></label>
-                        <input type="text" name="raza" placeholder="Holstein, Jersey, Gyrolanda…" required>
+                    <div class="field-row-2">
+                        <div class="field">
+                            <label class="field-label">Nombre del animal <span class="field-req">*</span></label>
+                            <input type="text" name="nombre" placeholder="Ej. Pepita, La Roja…" required>
+                        </div>
+                        <div class="field">
+                            <label class="field-label">Raza <span class="field-req">*</span></label>
+                            <input type="text" name="raza" placeholder="Holstein, Jersey…" required>
+                        </div>
                     </div>
 
                     <div class="field-row-2">
                         <div class="field">
                             <label class="field-label">Foto de la vaca</label>
-                            <input type="file" name="foto" accept=".jpg,.jpeg,.png,.webp,.avif,image/*">
+                            <input type="file" name="foto" accept=".jpg,.jpeg,.png,.webp,.avif,image/*" class="field-file">
                         </div>
                         <div class="field">
                             <label class="field-label">Partos</label>
@@ -320,12 +321,12 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
 
                     <div class="field">
                         <label class="field-label">Descripción / procedencia</label>
-                        <textarea name="descripcion" rows="3" placeholder="Ej. Viene de la finca El Rosario, ingresó en 2024, de buen comportamiento..."></textarea>
+                        <textarea name="descripcion" rows="2" placeholder="Ej. Viene de la finca El Rosario, ingresó en 2024, de buen comportamiento..."></textarea>
                     </div>
 
                     <div class="field">
                         <label class="field-label">Vacunas registradas</label>
-                        <textarea name="vacunas_info" rows="3" placeholder="Ej. Brucelosis, aftosa, carbón sintomático..."></textarea>
+                        <textarea name="vacunas_info" rows="2" placeholder="Ej. Brucelosis, aftosa, carbón sintomático..."></textarea>
                     </div>
 
                     <div class="field">

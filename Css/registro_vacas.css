@@ -419,11 +419,24 @@ tbody td:last-child { text-align: right; }
   background: var(--bg-surface);
   border: 1px solid var(--border-mid);
   border-radius: var(--r-xl);
-  width: 100%; max-width: 480px;
+  width: 100%; max-width: 560px;
+  max-height: calc(100vh - 40px);
+  display: flex; flex-direction: column;
   overflow: hidden;
   position: relative;
   animation: entrarModal .25s var(--spring);
 }
+/* Header y divisor fijos; el formulario ocupa el resto y el cuerpo hace scroll */
+.contenedorModal1 .modal-header,
+.contenedorModal1 .modal-divider { flex-shrink: 0; }
+.contenedorModal1 form {
+  display: flex; flex-direction: column;
+  min-height: 0; flex: 1 1 auto; overflow: hidden;
+}
+.contenedorModal1 .modal-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+}
+.contenedorModal1 .modal-footer { flex-shrink: 0; }
 .contenedorModal1::before {
   content: '';
   position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
@@ -476,7 +489,7 @@ tbody td:last-child { text-align: right; }
 /* Body modal */
 .modal-body {
   padding: 18px 24px;
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 13px;
 }
 
 .contenedorModal1 input,
@@ -525,8 +538,21 @@ tbody td:last-child { text-align: right; }
 }
 .contenedorModal1 textarea {
   resize: vertical;
-  min-height: 88px;
+  min-height: 60px;
+  line-height: 1.45;
 }
+/* Input de archivo legible dentro de columna estrecha */
+.contenedorModal1 .field-file {
+  padding: 7px 10px; font-size: 12px; cursor: pointer;
+}
+.contenedorModal1 .field-file::-webkit-file-upload-button,
+.contenedorModal1 .field-file::file-selector-button {
+  margin-right: 10px; padding: 5px 10px;
+  border: 1px solid var(--border-subtle); border-radius: var(--r-sm);
+  background: var(--bg-elevated); color: var(--text-secondary);
+  font-family: var(--font); font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.contenedorModal1 .field-file::file-selector-button:hover { background: var(--bg-hover); }
 .contenedorModal1 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23485644' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
