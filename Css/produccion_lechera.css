@@ -264,9 +264,12 @@ html.light .icon-sun  { opacity: 1; transform: scale(1) rotate(0deg); }
 .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 700; }
 .stat-icon { width: 40px; height: 40px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
 .stat-icon svg { width: 18px; height: 18px; }
-.si-green { background: rgba(111,205,111,0.18); border: 1px solid rgba(99,179,237,0.3); }
-.si-blue  { background: rgba(81,144,200,0.18); border: 1px solid rgba(81,144,200,0.32); }
-.si-amber { background: rgba(196,136,58,0.16); border: 1px solid rgba(196,136,58,0.32); }
+/* Íconos de estadística alineados con Gestión de vacas (registro_vacas.css)
+   para mantener el mismo lenguaje de color entre módulos: si-green usa el
+   azul del acento (#63B3ED) en vez de verde; si-blue/si-amber idénticos. */
+.si-green { background: rgba(99,179,237,0.18); border: 1px solid rgba(99,179,237,0.28); }
+.si-blue  { background: rgba(81,144,200,0.18); border: 1px solid rgba(81,144,200,0.28); }
+.si-amber { background: rgba(196,136,58,0.16); border: 1px solid rgba(196,136,58,0.28); }
 .stat-value { font-size: 36px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
 .stat-meta { font-size: 12px; color: var(--text-secondary); }
 
