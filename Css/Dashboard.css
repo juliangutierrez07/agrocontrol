@@ -827,9 +827,10 @@ html.light .icon-sun  { display: block; }
    ESTADO VACÍO GENÉRICO (.empty-block)
    ════════════════════════════════════════════ */
 .empty-block {
+  flex: 1 1 auto;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 4px; min-height: 130px; padding: 22px 16px;
+  gap: 4px; min-height: 140px; padding: 22px 16px;
   text-align: center; color: var(--text-secondary);
 }
 .empty-badge {
