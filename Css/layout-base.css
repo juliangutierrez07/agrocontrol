@@ -41,6 +41,16 @@ aside.sidebar {
   transition: width .25s cubic-bezier(0.4,0,0.2,1), transform .25s cubic-bezier(0.4,0,0.2,1);
 }
 
+/* ── Sidebar colapsado (desktop, vía menú hamburguesa) ── */
+body.sb-collapsed aside#sidebar,
+body.sb-collapsed aside.sidebar {
+  width: 0;
+  min-width: 0;
+  border-right-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── Main content area ── */
 .main {
   flex: 1;

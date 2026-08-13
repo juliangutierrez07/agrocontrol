@@ -154,13 +154,17 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
         <div class="topbar-right">
 
             <!-- Buscador -->
-            <label class="tb-search" aria-label="Buscar en el sistema">
-                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                    <circle cx="7.5" cy="7.5" r="5"/>
-                    <line x1="11.5" y1="11.5" x2="16" y2="16"/>
-                </svg>
-                <input type="text" placeholder="Buscar..." autocomplete="off">
-            </label>
+            <div class="tb-search-wrap">
+                <label class="tb-search" aria-label="Buscar en el sistema">
+                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <circle cx="7.5" cy="7.5" r="5"/>
+                        <line x1="11.5" y1="11.5" x2="16" y2="16"/>
+                    </svg>
+                    <input type="text" id="tbSearchInput" placeholder="Buscar..." autocomplete="off"
+                           role="combobox" aria-expanded="false" aria-controls="tbSearchResults" aria-autocomplete="list">
+                </label>
+                <div class="tb-search-results" id="tbSearchResults" role="listbox" hidden></div>
+            </div>
 
             <!-- Pill estado finca activa -->
             <div class="tb-status-pill" aria-label="Estado del sistema">
@@ -187,13 +191,73 @@ $userInitial = strtoupper(mb_substr($_SESSION['nombre'] ?? 'U', 0, 1));
             </button>
 
             <!-- Notificaciones -->
-            <button class="tb-icon-btn tb-notify" type="button" aria-label="Notificaciones">
-                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                    <path d="M9 2a2.7 2.7 0 00-2.7 2.7v1A4 4 0 014 9.3v1.2l-1.2 1.5h12.4L14 10.5V9.3a4 4 0 01-2.3-3.6V4.7A2.7 2.7 0 009 2z"/>
-                    <path d="M7 14a2 2 0 004 0"/>
-                </svg>
-                <span class="tb-notify-dot" aria-hidden="true"></span>
-            </button>
+            <?php $notifTotal = count($proximasVacunas) + count($alertasProduccion); ?>
+            <div class="tb-notify-wrap">
+                <button class="tb-icon-btn tb-notify" type="button" id="notifToggle"
+                        aria-label="Notificaciones" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M9 2a2.7 2.7 0 00-2.7 2.7v1A4 4 0 014 9.3v1.2l-1.2 1.5h12.4L14 10.5V9.3a4 4 0 01-2.3-3.6V4.7A2.7 2.7 0 009 2z"/>
+                        <path d="M7 14a2 2 0 004 0"/>
+                    </svg>
+                    <?php if ($notifTotal > 0): ?>
+                    <span class="tb-notify-badge" aria-hidden="true"><?php echo $notifTotal > 9 ? '9+' : $notifTotal; ?></span>
+                    <?php endif; ?>
+                </button>
+
+                <div class="tb-notify-panel" id="notifPanel" role="menu" aria-label="Notificaciones" hidden>
+                    <div class="tb-notify-head">
+                        <span class="tb-notify-title">Notificaciones</span>
+                        <span class="tb-notify-count"><?php echo $notifTotal; ?></span>
+                    </div>
+                    <div class="tb-notify-body">
+                        <?php if ($notifTotal === 0): ?>
+                            <div class="tb-notify-empty">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    <path d="M13.7 21a2 2 0 01-3.4 0"/>
+                                </svg>
+                                <span>Todo al día. Sin alertas.</span>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($alertasProduccion as $a): ?>
+                            <a class="tb-notify-item" href="produccion_lechera.php" role="menuitem">
+                                <span class="tb-ni-icon tb-ni-warn" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M10.3 3.9L1.8 18a1.5 1.5 0 001.3 2.3h17.8A1.5 1.5 0 0022.2 18L13.7 3.9a1.5 1.5 0 00-2.6 0z"/>
+                                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                                    </svg>
+                                </span>
+                                <span class="tb-ni-copy">
+                                    <span class="tb-ni-title">Caída de producción · <?php echo e($a['nombre']); ?></span>
+                                    <span class="tb-ni-sub">Bajó <?php echo $a['caida_pct']; ?>% respecto a su promedio</span>
+                                </span>
+                                <span class="tb-ni-tag tb-ni-tag-warn">-<?php echo $a['caida_pct']; ?>%</span>
+                            </a>
+                            <?php endforeach; ?>
+                            <?php foreach ($proximasVacunas as $v):
+                                $d = (int)$v['dias_restantes'];
+                                if ($d === 0)     { $txt = 'Hoy';    $tagcls = 'tb-ni-tag-red'; }
+                                elseif ($d === 1) { $txt = 'Mañana'; $tagcls = 'tb-ni-tag-amber'; }
+                                else              { $txt = "{$d}d";  $tagcls = 'tb-ni-tag-green'; }
+                            ?>
+                            <a class="tb-notify-item" href="vacunaciones.html" role="menuitem">
+                                <span class="tb-ni-icon tb-ni-vac" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 3l2 2-7 7"/><path d="M17 5l2 2"/><path d="M3 21l9-9"/><path d="M14.5 5.5l-11 11 4 4 11-11z"/>
+                                    </svg>
+                                </span>
+                                <span class="tb-ni-copy">
+                                    <span class="tb-ni-title">Vacuna · <?php echo e($v['nombre_vaca']); ?></span>
+                                    <span class="tb-ni-sub"><?php echo e($v['tipo_vacuna']); ?> · <?php echo date('d/m/Y', strtotime($v['fecha_programada'])); ?></span>
+                                </span>
+                                <span class="tb-ni-tag <?php echo $tagcls; ?>"><?php echo $txt; ?></span>
+                            </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <a class="tb-notify-foot" href="vacunaciones.html">Ver todas las vacunaciones →</a>
+                </div>
+            </div>
 
             <!-- Avatar -->
             <button class="tb-avatar" type="button" aria-label="Perfil de usuario" title="<?php echo $userName; ?> · <?php echo ucfirst($userRole); ?>">
@@ -669,21 +733,132 @@ function toggleTheme() {
 }
 
 /* ══════════════════════════════════════════
-   SIDEBAR MÓVIL
+   MENÚ HAMBURGUESA
+   Desktop (>860px): colapsa/expande el sidebar.
+   Móvil (≤860px):   abre/cierra el drawer + overlay.
    ══════════════════════════════════════════ */
 const toggle  = document.getElementById('menuToggle');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sbOverlay');
-if (toggle) {
-    toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('sb-open');
-        overlay.classList.toggle('sb-overlay-show');
-    });
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('sb-open');
-        overlay.classList.remove('sb-overlay-show');
-    });
+const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
+
+function closeMobileSidebar() {
+    sidebar.classList.remove('sb-open');
+    overlay.classList.remove('sb-overlay-show');
 }
+
+if (toggle) {
+    // Restaurar estado colapsado (solo desktop)
+    try {
+        if (localStorage.getItem('acSidebar') === 'collapsed' && !isMobile()) {
+            document.body.classList.add('sb-collapsed');
+        }
+    } catch (e) {}
+
+    toggle.addEventListener('click', () => {
+        if (isMobile()) {
+            sidebar.classList.toggle('sb-open');
+            overlay.classList.toggle('sb-overlay-show');
+        } else {
+            const collapsed = document.body.classList.toggle('sb-collapsed');
+            try { localStorage.setItem('acSidebar', collapsed ? 'collapsed' : 'expanded'); } catch (e) {}
+        }
+    });
+    overlay.addEventListener('click', closeMobileSidebar);
+    // Al pasar a desktop, cerrar cualquier drawer abierto
+    window.addEventListener('resize', () => { if (!isMobile()) closeMobileSidebar(); });
+}
+
+/* ══════════════════════════════════════════
+   BUSCADOR — navegación rápida
+   ══════════════════════════════════════════ */
+(function(){
+    const input   = document.getElementById('tbSearchInput');
+    const results = document.getElementById('tbSearchResults');
+    if (!input || !results) return;
+
+    // Destinos disponibles (respeta rol de administrador)
+    const DEST = [
+        { t: 'Dashboard',          d: 'Resumen general y métricas',      u: 'Dashboard.php',          k: 'inicio panel metricas resumen' },
+        { t: 'Gestión de vacas',   d: 'Registro y estado del hato',      u: 'Registro_Vacas.php',     k: 'animales ganado hato registro vacas' },
+        { t: 'Producción lechera', d: 'Ordeños y litros por vaca',       u: 'produccion_lechera.php', k: 'leche litros ordeño produccion' },
+        { t: 'Potreros y mangas',  d: 'Distribución de potreros',        u: 'potrero.php',            k: 'potreros mangas pastura terreno' },
+        { t: 'Vacunaciones',       d: 'Calendario de vacunas',           u: 'vacunaciones.html',      k: 'vacunas salud sanidad calendario' }
+        <?php if (current_user_role() === 'administrador'): ?>
+        ,{ t: 'Gestión de usuarios', d: 'Administrar cuentas del sistema', u: 'usuarios.php',         k: 'usuarios cuentas admin permisos roles' }
+        <?php endif; ?>
+    ];
+
+    let active = -1;
+    let shown  = [];
+
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+    function render(list) {
+        shown = list;
+        active = -1;
+        if (!list.length) {
+            results.innerHTML = '<div class="tb-sr-empty">Sin resultados</div>';
+        } else {
+            results.innerHTML = list.map((r,i) =>
+                `<a class="tb-sr-item" href="${r.u}" role="option" data-i="${i}">
+                    <span class="tb-sr-title">${r.t}</span>
+                    <span class="tb-sr-sub">${r.d}</span>
+                 </a>`).join('');
+        }
+        results.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+    }
+
+    function close() {
+        results.hidden = true;
+        active = -1;
+        input.setAttribute('aria-expanded', 'false');
+    }
+
+    function highlight() {
+        [...results.querySelectorAll('.tb-sr-item')].forEach((el,i) =>
+            el.classList.toggle('tb-sr-active', i === active));
+    }
+
+    input.addEventListener('input', () => {
+        const q = norm(input.value.trim());
+        if (!q) { close(); return; }
+        render(DEST.filter(r => norm(r.t + ' ' + r.k).includes(q)));
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (results.hidden) return;
+        if (e.key === 'ArrowDown')      { e.preventDefault(); active = Math.min(active+1, shown.length-1); highlight(); }
+        else if (e.key === 'ArrowUp')   { e.preventDefault(); active = Math.max(active-1, 0); highlight(); }
+        else if (e.key === 'Enter')     { e.preventDefault(); const r = shown[active] || shown[0]; if (r) location.href = r.u; }
+        else if (e.key === 'Escape')    { close(); input.blur(); }
+    });
+
+    input.addEventListener('focus', () => { if (input.value.trim()) input.dispatchEvent(new Event('input')); });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.tb-search-wrap')) close(); });
+})();
+
+/* ══════════════════════════════════════════
+   NOTIFICACIONES — panel desplegable
+   ══════════════════════════════════════════ */
+(function(){
+    const btn   = document.getElementById('notifToggle');
+    const panel = document.getElementById('notifPanel');
+    if (!btn || !panel) return;
+
+    function toggleP(open) {
+        const show = open ?? panel.hidden;
+        panel.hidden = !show;
+        btn.setAttribute('aria-expanded', String(show));
+    }
+
+    btn.addEventListener('click', (e) => { e.stopPropagation(); toggleP(); });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.tb-notify-wrap')) toggleP(false);
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleP(false); });
+})();
 </script>
 </body>
 </html>
