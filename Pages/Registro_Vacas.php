@@ -310,7 +310,21 @@ $enrazada = (int)(db_value($con, "SELECT COUNT(*) FROM vacas WHERE estado = 'enr
                         </div>
                         <div class="field">
                             <label class="field-label">Raza <span class="field-req">*</span></label>
-                            <input type="text" name="raza" placeholder="Holstein, Jersey…" required>
+                            <select name="raza" id="razaSelect" required>
+                                <option value="" disabled selected>Selecciona una raza…</option>
+                                <option value="Holstein">Holstein</option>
+                                <option value="Jersey">Jersey</option>
+                                <option value="Pardo Suizo">Pardo Suizo</option>
+                                <option value="Normando">Normando</option>
+                                <option value="Gyr">Gyr</option>
+                                <option value="Girolando">Girolando</option>
+                                <option value="Simmental">Simmental</option>
+                                <option value="Ayrshire">Ayrshire</option>
+                                <option value="Criollo (BON/Romosinuano)">Criollo (BON/Romosinuano)</option>
+                                <option value="otra">Otra (especificar)</option>
+                            </select>
+                            <input type="text" name="raza_otra" id="razaOtra" class="raza-otra-input"
+                                   placeholder="Especifica la raza" maxlength="50" autocomplete="off" hidden>
                         </div>
                     </div>
 

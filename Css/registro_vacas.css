@@ -559,6 +559,9 @@ tbody td:last-child { text-align: right; }
 }
 .field-error-msg[hidden] { display: none; }
 .field-error-msg svg { width: 12px; height: 12px; flex-shrink: 0; }
+/* Input condicional cuando la raza es "Otra" */
+.contenedorModal1 .raza-otra-input { margin-top: 7px; }
+.contenedorModal1 .raza-otra-input[hidden] { display: none; }
 /* Input de archivo legible dentro de columna estrecha */
 .contenedorModal1 .field-file {
   padding: 7px 10px; font-size: 12px; cursor: pointer;

@@ -99,6 +99,30 @@ function validarCodigoVaca() {
     }
 })();
 
+/* ── RAZA: mostrar input libre cuando se elige "Otra" ──
+   Si se selecciona "otra", aparece un input para escribir la raza y ese
+   valor es el que viaja al backend (name="raza_otra"). El input solo es
+   required mientras está visible, para no bloquear el envío en los demás casos. */
+(function() {
+    var sel  = document.getElementById('razaSelect');
+    var otra = document.getElementById('razaOtra');
+    if (!sel || !otra) { return; }
+
+    function toggleRazaOtra() {
+        var esOtra = sel.value === 'otra';
+        otra.hidden = !esOtra;
+        otra.required = esOtra;
+        if (esOtra) {
+            otra.focus();
+        } else {
+            otra.value = '';
+            otra.classList.remove('input-error');
+        }
+    }
+
+    sel.addEventListener('change', toggleRazaOtra);
+})();
+
 /* ── VALIDACIÓN: estado seleccionado + código no duplicado antes de enviar ── */
 (function() {
     var form = document.querySelector('.contenedorModal1 form');
