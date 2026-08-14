@@ -236,8 +236,10 @@ html.light .icon-sun  { opacity: 1; transform: scale(1) rotate(0deg); }
   gap: 18px; padding: 26px 26px 0;
 }
 .stat-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(99,179,237,0.08));
-  border: 1px solid rgba(99,179,237,0.26);
+  /* Fondo navy sólido igual que Gestión de vacas (registro_vacas.css), en
+     vez del degradado azulado translúcido anterior. */
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-subtle);
   border-radius: 24px;
   padding: 22px 24px;
   display: flex; flex-direction: column; gap: 16px;
