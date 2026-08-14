@@ -16,9 +16,15 @@ date_default_timezone_set('America/Bogota');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroControl | Producción Lechera</title>
-    <link rel="stylesheet" href="../Css/layout-base.css">
-    <link rel="stylesheet" href="../Css/Dashboard.css">
-    <link rel="stylesheet" href="../Css/produccion_lechera.css?v=20260702">
+    <?php
+      // Cache-busting: fuerza al navegador a recargar el CSS tras cada despliegue.
+      $vBase = @filemtime(__DIR__ . '/../Css/layout-base.css') ?: time();
+      $vDash = @filemtime(__DIR__ . '/../Css/Dashboard.css') ?: time();
+      $vProd = @filemtime(__DIR__ . '/../Css/produccion_lechera.css') ?: time();
+    ?>
+    <link rel="stylesheet" href="../Css/layout-base.css?v=<?php echo $vBase; ?>">
+    <link rel="stylesheet" href="../Css/Dashboard.css?v=<?php echo $vDash; ?>">
+    <link rel="stylesheet" href="../Css/produccion_lechera.css?v=<?php echo $vProd; ?>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
