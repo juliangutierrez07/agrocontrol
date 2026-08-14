@@ -302,6 +302,37 @@ tbody td:last-child { text-align: right; }
 }
 .checkbox-label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
 
+/* ── Multi-select de vacas (asignación múltiple) ──
+   Reutiliza los checkboxes de arriba dentro de un desplegable scrollable. */
+.multi-select { position: relative; }
+.multi-select-toggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-input); border: 1.5px solid var(--border-mid); border-radius: var(--r-sm);
+  color: var(--text-primary); font-family: var(--font); font-size: 12.5px; cursor: pointer;
+  transition: border-color .14s var(--ease), box-shadow .14s var(--ease);
+}
+.multi-select-toggle:hover { border-color: var(--accent-border); }
+.multi-select-toggle.ms-open { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.ms-caret { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-secondary); transition: transform .18s var(--ease); }
+.multi-select-toggle.ms-open .ms-caret { transform: rotate(180deg); }
+.multi-select-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20;
+  background: var(--bg-elevated); border: 1px solid var(--border-mid); border-radius: var(--r-sm);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.45);
+  padding: 8px; max-height: 240px; overflow-y: auto;
+}
+.multi-select-panel[hidden] { display: none; }
+.ms-all { padding: 8px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 6px; }
+.ms-all .checkbox-label { font-weight: 700; color: var(--text-primary); }
+.ms-list { display: flex; flex-direction: column; gap: 2px; }
+.ms-item { padding: 7px 8px; border-radius: var(--r-xs); }
+.ms-item:hover { background: var(--bg-hover); }
+.ms-empty {
+  font-size: 12.5px; color: var(--text-secondary); padding: 11px 12px;
+  background: var(--bg-input); border: 1px dashed var(--border-mid); border-radius: var(--r-sm);
+}
+
 /* Panel mangas */
 .mangas-panel { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .mangas-panel-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .6px; }

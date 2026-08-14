@@ -629,21 +629,44 @@ $con = conexion();
             <?= csrf_field() ?>
             <div class="modal-body">
                 <div class="field">
-                    <label class="field-label" for="asig_vaca_id">Vaca <span class="field-req">*</span></label>
-                    <select name="vaca_id" id="asig_vaca_id" required>
-                        <option value="">-- Seleccione una vaca --</option>
-                        <?php
-                            $sqlVacasLibres = "SELECT v.id, v.nombre, v.codigo FROM vacas v
-                                WHERE v.usuario_id = ?
-                                AND v.id NOT IN (
-                                    SELECT vaca_id FROM asignaciones WHERE fecha_salida IS NULL
-                                ) ORDER BY v.nombre ASC";
-                            $resVL = db_result($con, $sqlVacasLibres, "i", [$uid]);
-                            while ($vl = mysqli_fetch_assoc($resVL)):
-                        ?>
-                        <option value="<?= $vl['id'] ?>"><?= htmlspecialchars($vl['nombre']) ?> (<?= $vl['codigo'] ?>)</option>
-                        <?php endwhile; ?>
-                    </select>
+                    <label class="field-label">Vacas <span class="field-req">*</span></label>
+                    <?php
+                        $sqlVacasLibres = "SELECT v.id, v.nombre, v.codigo FROM vacas v
+                            WHERE v.usuario_id = ?
+                            AND v.id NOT IN (
+                                SELECT vaca_id FROM asignaciones WHERE fecha_salida IS NULL
+                            ) ORDER BY v.nombre ASC";
+                        $resVL = db_result($con, $sqlVacasLibres, "i", [$uid]);
+                        $vacasLibres = [];
+                        while ($vl = mysqli_fetch_assoc($resVL)) { $vacasLibres[] = $vl; }
+                    ?>
+                    <?php if (empty($vacasLibres)): ?>
+                        <div class="ms-empty">No hay vacas libres para asignar en este momento.</div>
+                    <?php else: ?>
+                    <div class="multi-select" id="asigVacasMulti">
+                        <button type="button" class="multi-select-toggle" id="asigVacasToggle"
+                                aria-haspopup="listbox" aria-expanded="false" onclick="toggleVacasDropdown()">
+                            <span id="asigVacasCount">0 vacas seleccionadas</span>
+                            <svg class="ms-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+                        </button>
+                        <div class="multi-select-panel" id="asigVacasPanel" hidden>
+                            <label class="checkbox-wrap ms-all">
+                                <input type="checkbox" id="asigVacasAll" onchange="toggleAllVacas(this)">
+                                <div class="checkbox-box"></div>
+                                <span class="checkbox-label">Seleccionar todas</span>
+                            </label>
+                            <div class="ms-list">
+                                <?php foreach ($vacasLibres as $vl): ?>
+                                <label class="checkbox-wrap ms-item">
+                                    <input type="checkbox" name="vacas_ids[]" value="<?= (int)$vl['id'] ?>" class="asig-vaca-check" onchange="actualizarVacasCount()">
+                                    <div class="checkbox-box"></div>
+                                    <span class="checkbox-label"><?= htmlspecialchars($vl['nombre']) ?> (<?= htmlspecialchars($vl['codigo']) ?>)</span>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div class="field">
                     <label class="field-label" for="asig_potrero_id">Finca <span class="field-req">*</span></label>
@@ -704,7 +727,7 @@ $con = conexion();
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
-                    La vaca quedará activa en esa finca hasta que se registre su salida o movimiento a otra finca
+                    <span id="asigHintText">Las vacas seleccionadas quedarán activas en esa finca hasta que se registre su salida o movimiento a otra finca</span>
                 </div>
                 <div class="modal-footer-btns">
                     <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAsignar')">Cancelar</button>
@@ -1294,19 +1317,37 @@ document.getElementById('edit_tiene_mangas').addEventListener('change', function
     const p  = new URLSearchParams(window.location.search);
     const ok = p.get('ok');
     if (ok === 'asignacion' || ok === 'movimiento') {
-        const vaca    = p.get('vaca')    || '—';
         const potrero = p.get('potrero') || '—';
         const manga   = p.get('manga')   || '';
         const fecha   = p.get('fecha')   || '—';
         const usuario = p.get('usuario') || '—';
-        document.getElementById('res_vaca').textContent    = vaca;
+
+        let vacaTxt, accion, desc;
+        if (ok === 'asignacion') {
+            const count = parseInt(p.get('count') || '0', 10);
+            const ya    = parseInt(p.get('ya_asignadas') || '0', 10);
+            const sc    = parseInt(p.get('sin_cupo') || '0', 10);
+            vacaTxt = (count === 1 ? '1 vaca' : count + ' vacas');
+            accion  = '¡Vacas asignadas!';
+            desc    = (count === 1 ? '1 vaca asignada correctamente' : count + ' vacas asignadas correctamente');
+            const omit = [];
+            if (ya > 0) omit.push(ya + (ya === 1 ? ' ya asignada' : ' ya asignadas'));
+            if (sc > 0) omit.push(sc + ' sin cupo');
+            if (omit.length) desc += ' · Omitidas: ' + omit.join(', ');
+        } else {
+            vacaTxt = p.get('vaca') || '—';
+            accion  = '¡Vaca movida!';
+            desc    = 'Traslado registrado correctamente';
+        }
+
+        document.getElementById('res_vaca').textContent    = vacaTxt;
         document.getElementById('res_potrero').textContent = potrero;
         document.getElementById('res_usuario').textContent = usuario;
         if (fecha && fecha !== '—') { const [y,m,d] = fecha.split('-'); document.getElementById('res_fecha').textContent = `${d}/${m}/${y}`; }
         if (manga) { document.getElementById('res_manga').textContent = 'Manga ' + manga; document.getElementById('res_manga_row').style.display = 'flex'; }
         else { document.getElementById('res_manga_row').style.display = 'none'; }
-        document.getElementById('resumen_accion').textContent = ok === 'asignacion' ? '¡Vaca asignada!'    : '¡Vaca movida!';
-        document.getElementById('resumen_desc').textContent   = ok === 'asignacion' ? 'Asignada correctamente' : 'Traslado registrado correctamente';
+        document.getElementById('resumen_accion').textContent = accion;
+        document.getElementById('resumen_desc').textContent   = desc;
         document.getElementById('resumen_titulo').textContent = ok === 'asignacion' ? 'Asignación exitosa' : 'Movimiento exitoso';
         abrirModal('modalResumen');
         window.history.replaceState({}, '', 'potrero.php');
@@ -1318,6 +1359,63 @@ document.getElementById('edit_tiene_mangas').addEventListener('change', function
    ══════════════════════════════════════════════ */
 function abrirModal(id)  { document.getElementById(id).classList.add('activo'); }
 function cerrarModal(id) { document.getElementById(id).classList.remove('activo'); }
+
+/* ══════════════════════════════════════════════
+   MULTI-SELECT DE VACAS (asignación múltiple)
+   ══════════════════════════════════════════════ */
+function toggleVacasDropdown() {
+    var panel  = document.getElementById('asigVacasPanel');
+    var toggle = document.getElementById('asigVacasToggle');
+    if (!panel || !toggle) return;
+    var abrir = panel.hidden;
+    panel.hidden = !abrir;
+    toggle.setAttribute('aria-expanded', String(abrir));
+    toggle.classList.toggle('ms-open', abrir);
+}
+function toggleAllVacas(cb) {
+    document.querySelectorAll('.asig-vaca-check').forEach(function (c) { c.checked = cb.checked; });
+    actualizarVacasCount();
+}
+function actualizarVacasCount() {
+    var checks = Array.prototype.slice.call(document.querySelectorAll('.asig-vaca-check'));
+    var total  = checks.length;
+    var sel    = checks.filter(function (c) { return c.checked; }).length;
+
+    var cEl = document.getElementById('asigVacasCount');
+    if (cEl) cEl.textContent = (sel === 1 ? '1 vaca seleccionada' : sel + ' vacas seleccionadas');
+
+    var all = document.getElementById('asigVacasAll');
+    if (all) { all.checked = (total > 0 && sel === total); all.indeterminate = (sel > 0 && sel < total); }
+
+    var hint = document.getElementById('asigHintText');
+    if (hint) {
+        hint.textContent = sel > 0
+            ? ('Las ' + sel + (sel === 1 ? ' vaca quedará activa' : ' vacas quedarán activas') +
+               ' en esa finca hasta que se registre su salida o movimiento a otra finca')
+            : 'Las vacas seleccionadas quedarán activas en esa finca hasta que se registre su salida o movimiento a otra finca';
+    }
+}
+/* Cerrar el desplegable al hacer click fuera de él */
+document.addEventListener('click', function (e) {
+    var ms    = document.getElementById('asigVacasMulti');
+    var panel = document.getElementById('asigVacasPanel');
+    if (ms && panel && !panel.hidden && !ms.contains(e.target)) {
+        panel.hidden = true;
+        var t = document.getElementById('asigVacasToggle');
+        if (t) { t.setAttribute('aria-expanded', 'false'); t.classList.remove('ms-open'); }
+    }
+});
+/* Exigir al menos una vaca seleccionada antes de enviar */
+(function () {
+    var form = document.querySelector('#modalAsignar form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        if (document.querySelectorAll('.asig-vaca-check:checked').length === 0) {
+            e.preventDefault();
+            showToast('Selecciona al menos una vaca.', 'error');
+        }
+    });
+})();
 document.querySelectorAll('.modalOverlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('activo'); });
 });
@@ -1433,6 +1531,8 @@ showToast('✅ ' + <?= json_encode(match($_GET['ok']) {
 <?php elseif (isset($_GET['error'])): ?>
 showToast('⚠️ ' + <?= json_encode(match($_GET['error']) {
     'vaca_ya_asignada'         => 'Esta vaca ya tiene un potrero asignado',
+    'sin_vacas'                => 'Selecciona al menos una vaca para asignar',
+    'todas_ya_asignadas'       => 'Las vacas seleccionadas ya tienen un potrero asignado',
     'potrero_lleno'            => 'El potrero destino está al máximo de capacidad',
     'manga_llena'              => 'Esta manga ya está al máximo de capacidad, selecciona otra manga',
     'potrero_no_encontrado'    => 'No se encontró el potrero seleccionado',
