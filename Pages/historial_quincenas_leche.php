@@ -113,16 +113,6 @@ if ($fechaInicioControl) {
             <div class="topbar-title">Historial para quincenas de pago de leche</div>
         </div>
         <div class="topbar-right">
-            <form method="GET" class="filtro-form">
-                <div class="filtro-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7H14.5a3.5 3.5 0 010 7H6"/></svg>
-                    <input type="number" name="precio_litro" value="<?php echo $precioLitro > 0 ? htmlspecialchars((string) $precioLitro) : ''; ?>" step="0.01" min="0" placeholder="Valor litro">
-                    <button type="submit" class="btn-filtrar">Calcular</button>
-                    <a href="historial_quincenas_leche.php" class="btn-reset">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </a>
-                </div>
-            </form>
             <a href="produccion_lechera.php" class="back-link">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/><path d="M21 12H9"/></svg>
                 Volver a produccion
@@ -132,132 +122,103 @@ if ($fechaInicioControl) {
 
     <div class="page-shell">
         <?php if (!empty($registros)): ?>
-        <div class="intro-card">
-            <div class="intro-kicker">Control general</div>
-            <h1>Quincenas calculadas cada 15 dias desde tu primer registro</h1>
-            <p>
-                El sistema toma la primera fecha registrada de produccion, arma periodos de 15 dias corridos
-                y te muestra cuanto leche sacaste en cada quincena para que revises lo que te deben pagar.
-            </p>
-            <div class="intro-meta">
-                <span class="meta-pill">Inicio: <?php echo $fechaInicioControl ? $fechaInicioControl->format('d/m/Y') : '-'; ?></span>
-                <span class="meta-pill">Ultimo registro: <?php echo $fechaUltimoRegistro ? $fechaUltimoRegistro->format('d/m/Y') : '-'; ?></span>
-                <span class="meta-pill">Total quincenas: <?php echo $totalQuincenas; ?></span>
+        <!-- (b) Resumen compacto: 4 métricas en fila + info -->
+        <div class="resumen-card">
+            <div class="resumen-head">
+                <span class="resumen-title">Resumen del control quincenal</span>
+                <span class="info-tip" tabindex="0" role="button" aria-label="Cómo se calculan las quincenas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span class="info-tip-bubble">
+                        Se toma tu primer registro (<?php echo $fechaInicioControl->format('d/m/Y'); ?>) y se arman bloques de 15 días corridos.
+                        Q1: <?php echo $fechaInicioControl->format('d/m'); ?>–<?php echo (clone $fechaInicioControl)->modify('+14 days')->format('d/m'); ?>,
+                        Q2: <?php echo $ejemploSiguienteInicio->format('d/m'); ?>–<?php echo $ejemploSiguienteFin->format('d/m'); ?>, y así sucesivamente.
+                    </span>
+                </span>
             </div>
-            <div class="cut-explanation">
-                <strong>Corte exacto:</strong>
-                La quincena 1 va del <?php echo $fechaInicioControl ? $fechaInicioControl->format('d/m/Y') : '-'; ?>
-                al <?php echo $fechaInicioControl ? (clone $fechaInicioControl)->modify('+14 days')->format('d/m/Y') : '-'; ?>.
-                La quincena 2 va del <?php echo $ejemploSiguienteInicio ? $ejemploSiguienteInicio->format('d/m/Y') : '-'; ?>
-                al <?php echo $ejemploSiguienteFin ? $ejemploSiguienteFin->format('d/m/Y') : '-'; ?>.
-                Asi sigue siempre en bloques exactos de 15 dias.
+            <div class="resumen-metrics">
+                <div class="metric">
+                    <span class="metric-label">Inicio del control</span>
+                    <span class="metric-value"><?php echo $fechaInicioControl->format('d/m/Y'); ?></span>
+                    <span class="metric-sub">primer registro</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Periodo actual</span>
+                    <span class="metric-value"><?php echo $resumenActual ? number_format($resumenActual['litros'], 1) . ' L' : '—'; ?></span>
+                    <span class="metric-sub"><?php echo $resumenActual ? 'del ' . date('d/m', strtotime($resumenActual['inicio'])) . ' al ' . date('d/m', strtotime($resumenActual['fin'])) : 'sin periodo activo'; ?></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Litros acumulados</span>
+                    <span class="metric-value"><?php echo number_format($litrosAcumulados, 1); ?> L</span>
+                    <span class="metric-sub"><?php echo $totalQuincenas; ?> quincena<?php echo $totalQuincenas === 1 ? '' : 's'; ?></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Pago estimado actual</span>
+                    <span class="metric-value metric-pay"><?php echo $precioLitro > 0 && $resumenActual ? '$' . number_format($resumenActual['pago_estimado'], 0, ',', '.') : '—'; ?></span>
+                    <span class="metric-sub"><?php echo $precioLitro > 0 ? 'según valor litro' : 'ingresa el valor del litro'; ?></span>
+                </div>
             </div>
         </div>
 
-        <div class="current-pay-banner">
-            <div class="current-pay-label">Hoy vas acumulado en esta quincena</div>
-            <div class="current-pay-value">
-                <?php echo $precioLitro > 0 && $resumenActual ? '$' . number_format($resumenActual['pago_estimado'], 0, ',', '.') : '--'; ?>
+        <!-- (d) Acción: acumulado de hoy + valor litro + calcular -->
+        <div class="accion-card">
+            <div class="accion-info">
+                <span class="accion-label">Hoy vas acumulado en esta quincena</span>
+                <span class="accion-value"><?php echo $precioLitro > 0 && $resumenActual ? '$' . number_format($resumenActual['pago_estimado'], 0, ',', '.') : '—'; ?></span>
+                <span class="accion-meta">
+                    <?php if ($resumenActual): ?>
+                        <?php echo number_format($resumenActual['litros'], 1); ?> litros del <?php echo date('d/m/Y', strtotime($resumenActual['inicio'])); ?> al <?php echo date('d/m/Y', strtotime($resumenActual['fin'])); ?>
+                    <?php else: ?>
+                        No hay una quincena activa en este momento.
+                    <?php endif; ?>
+                </span>
             </div>
-            <div class="current-pay-meta">
-                <?php if ($resumenActual): ?>
-                    <?php echo number_format($resumenActual['litros'], 1); ?> litros del <?php echo date('d/m/Y', strtotime($resumenActual['inicio'])); ?> al <?php echo date('d/m/Y', strtotime($resumenActual['fin'])); ?>
-                <?php else: ?>
-                    No hay una quincena activa en este momento.
-                <?php endif; ?>
-                <?php if ($precioLitro <= 0): ?>
-                    Ingresa el valor del litro para ver el pago estimado.
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="stats-grid stats-grid-quincena">
-            <div class="stat-card">
-                <div class="stat-top">
-                    <div class="stat-label">Inicio del control</div>
-                    <div class="stat-icon si-blue">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-                    </div>
-                </div>
-                <div class="stat-value stat-value-date"><?php echo $fechaInicioControl->format('d/m'); ?></div>
-                <div class="stat-meta"><?php echo $fechaInicioControl->format('Y'); ?></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top">
-                    <div class="stat-label">Periodo actual</div>
-                    <div class="stat-icon si-green">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6 2 3 9 3 14a9 9 0 0018 0c0-5-3-12-9-12z"/></svg>
-                    </div>
-                </div>
-                <div class="stat-value"><?php echo $resumenActual ? number_format($resumenActual['litros'], 1) : '0.0'; ?></div>
-                <div class="stat-meta"><?php echo $resumenActual ? 'del ' . date('d/m', strtotime($resumenActual['inicio'])) . ' al ' . date('d/m', strtotime($resumenActual['fin'])) : 'sin periodo activo'; ?></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top">
-                    <div class="stat-label">Pago estimado actual</div>
-                    <div class="stat-icon si-amber">
+            <form method="GET" class="accion-form">
+                <label class="accion-form-label" for="precio_litro">Valor por litro</label>
+                <div class="accion-form-row">
+                    <div class="filtro-wrap">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7H14.5a3.5 3.5 0 010 7H6"/></svg>
+                        <input type="number" id="precio_litro" name="precio_litro" value="<?php echo $precioLitro > 0 ? htmlspecialchars((string) $precioLitro) : ''; ?>" step="0.01" min="0" placeholder="Ej. 1800">
                     </div>
+                    <button type="submit" class="btn-filtrar">Calcular</button>
+                    <?php if ($precioLitro > 0): ?>
+                    <a href="historial_quincenas_leche.php" class="btn-reset" title="Limpiar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </a>
+                    <?php endif; ?>
                 </div>
-                <div class="stat-value stat-value-payment"><?php echo $precioLitro > 0 && $resumenActual ? '$' . number_format($resumenActual['pago_estimado'], 0, ',', '.') : '--'; ?></div>
-                <div class="stat-meta"><?php echo $precioLitro > 0 ? 'segun valor por litro' : 'ingresa el valor del litro'; ?></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top">
-                    <div class="stat-label">Litros acumulados</div>
-                    <div class="stat-icon si-green">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6 2 3 9 3 14a9 9 0 0018 0c0-5-3-12-9-12z"/></svg>
-                    </div>
-                </div>
-                <div class="stat-value"><?php echo number_format($litrosAcumulados, 1); ?></div>
-                <div class="stat-meta">desde el primer registro</div>
-            </div>
+            </form>
         </div>
 
-        <div class="history-table-card payment-history-card">
-            <div class="toolbar-inline">
-                <span class="table-heading">Historial para quincenas de pago de leche</span>
-                <span class="search-badge">Bloques de 15 dias desde <?php echo $fechaInicioControl->format('d/m/Y'); ?></span>
+        <!-- (e) Listado real: cada quincena como tarjeta -->
+        <div class="quincenas-section">
+            <div class="quincenas-head">
+                <span class="quincenas-title">Historial de quincenas</span>
+                <span class="quincenas-badge">Bloques de 15 días desde <?php echo $fechaInicioControl->format('d/m/Y'); ?></span>
             </div>
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Quincena</th>
-                            <th>Desde</th>
-                            <th>Hasta</th>
-                            <th>Dias del corte</th>
-                            <th>Estado</th>
-                            <th>Litros</th>
-                            <th>Registros</th>
-                            <th>Pago estimado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (array_reverse($quincenas) as $quincena): ?>
-                        <tr class="<?php echo $quincena['estado'] === 'actual' ? 'row-actual' : ''; ?>">
-                            <td><span class="chip-date">Q<?php echo (int) $quincena['numero']; ?></span></td>
-                            <td><?php echo date('d/m/Y', strtotime($quincena['inicio'])); ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($quincena['fin'])); ?></td>
-                            <td>15 dias exactos</td>
-                            <td>
-                                <span class="status-pill status-<?php echo htmlspecialchars($quincena['estado']); ?>">
-                                    <?php echo $quincena['estado'] === 'actual' ? 'En curso' : ($quincena['estado'] === 'cerrada' ? 'Cerrada' : 'Proxima'); ?>
-                                </span>
-                            </td>
-                            <td><span class="litros-strong"><?php echo rtrim(rtrim(number_format($quincena['litros'], 1, '.', ''), '0'), '.'); ?> <span>L</span></span></td>
-                            <td><?php echo (int) $quincena['registros']; ?></td>
-                            <td>
-                                <?php if ($precioLitro > 0): ?>
-                                    <span class="payment-strong">$<?php echo number_format($quincena['pago_estimado'], 0, ',', '.'); ?></span>
-                                <?php else: ?>
-                                    <span class="payment-muted">Ingresa valor litro</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div class="quincenas-list">
+                <?php foreach (array_reverse($quincenas) as $quincena): ?>
+                <?php $estadoLabel = $quincena['estado'] === 'actual' ? 'En curso' : ($quincena['estado'] === 'cerrada' ? 'Cerrada' : 'Próxima'); ?>
+                <div class="quincena-card <?php echo $quincena['estado'] === 'actual' ? 'is-actual' : ''; ?>">
+                    <div class="qc-num">Q<?php echo (int) $quincena['numero']; ?></div>
+                    <div class="qc-body">
+                        <div class="qc-range"><?php echo date('d/m/Y', strtotime($quincena['inicio'])); ?> — <?php echo date('d/m/Y', strtotime($quincena['fin'])); ?></div>
+                        <div class="qc-tags">
+                            <span class="status-pill status-<?php echo htmlspecialchars($quincena['estado']); ?>"><?php echo $estadoLabel; ?></span>
+                            <span class="qc-regs"><?php echo (int) $quincena['registros']; ?> registro<?php echo (int) $quincena['registros'] === 1 ? '' : 's'; ?></span>
+                        </div>
+                    </div>
+                    <div class="qc-litros">
+                        <span class="litros-strong"><?php echo rtrim(rtrim(number_format($quincena['litros'], 1, '.', ''), '0'), '.'); ?> <span>L</span></span>
+                    </div>
+                    <div class="qc-pago">
+                        <?php if ($precioLitro > 0): ?>
+                            <span class="payment-strong">$<?php echo number_format($quincena['pago_estimado'], 0, ',', '.'); ?></span>
+                        <?php else: ?>
+                            <span class="payment-muted">—</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
             </div>
         </div>
         <?php else: ?>

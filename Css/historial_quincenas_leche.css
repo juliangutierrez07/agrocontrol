@@ -7,291 +7,139 @@
   gap: 16px;
 }
 
-.intro-card,
-.current-pay-banner,
-.payment-history-card,
+/* Tarjetas base (misma superficie navy que el resto) */
+.resumen-card,
+.accion-card,
+.quincenas-section,
 .empty-history {
   background: var(--bg-card);
   border: 1px solid var(--border-hairline);
   border-radius: var(--r-lg);
 }
 
-.intro-card {
-  padding: 22px;
+/* ── (b) Resumen compacto: 4 métricas + info ── */
+.resumen-card { padding: 18px 20px; }
+.resumen-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.resumen-title { font-size: 13px; font-weight: 700; color: var(--text-primary); letter-spacing: .2px; }
+
+.info-tip { position: relative; display: inline-flex; color: var(--text-muted); cursor: help; }
+.info-tip svg { width: 15px; height: 15px; }
+.info-tip:hover, .info-tip:focus-visible { color: var(--accent-text); outline: none; }
+.info-tip-bubble {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 30;
+  width: 300px; max-width: 78vw; padding: 10px 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border-mid); border-radius: var(--r-md);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+  font-size: 12px; line-height: 1.5; color: var(--text-secondary);
+  opacity: 0; pointer-events: none; transform: translateY(-4px);
+  transition: opacity .15s var(--ease), transform .15s var(--ease);
+}
+.info-tip:hover .info-tip-bubble { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.info-tip:focus .info-tip-bubble { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.info-tip:focus-within .info-tip-bubble { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+.resumen-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.metric {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--bg-elevated); border: 1px solid var(--border-hairline);
+}
+.metric-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); }
+.metric-value { font-size: 20px; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+.metric-value.metric-pay { color: var(--accent-text); }
+.metric-sub { font-size: 11.5px; color: var(--text-secondary); }
+
+/* ── (d) Acción: acumulado de hoy + valor litro ── */
+.accion-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  padding: 18px 20px;
+  border-color: var(--accent-border);
   background:
-    radial-gradient(circle at top right, rgba(99,179,237,.14), transparent 34%),
+    radial-gradient(circle at right top, rgba(99,179,237,.16), transparent 34%),
     var(--bg-card);
 }
+.accion-info { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
+.accion-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--accent-text); font-weight: 700; }
+.accion-value { font-size: 30px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+.accion-meta { font-size: 12.5px; color: var(--text-secondary); }
+.accion-form { display: flex; flex-direction: column; gap: 6px; }
+.accion-form-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.accion-form-row { display: flex; align-items: center; gap: 8px; }
 
-.intro-kicker {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .9px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.intro-card h1 {
-  font-size: 28px;
-  line-height: 1.1;
-  margin-bottom: 10px;
-}
-
-.intro-card p {
-  color: var(--text-secondary);
-  max-width: 860px;
-  margin-bottom: 14px;
-}
-
-.intro-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.cut-explanation {
-  margin-top: 14px;
+/* ── (e) Listado de quincenas como tarjetas ── */
+.quincenas-section { padding: 6px; }
+.quincenas-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 12px 14px;
-  border-radius: var(--r-md);
-  background: var(--bg-elevated);
-  border: 1px solid var(--accent-border);
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
 }
-
-.cut-explanation strong {
-  color: var(--text-primary);
+.quincenas-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.quincenas-badge {
+  font-size: 11px; color: var(--text-secondary);
+  background: var(--bg-elevated); border: 1px solid var(--border-hairline);
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap;
 }
-
-.meta-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-hairline);
-  color: var(--text-secondary);
-  font-size: 12px;
+.quincenas-list { display: flex; flex-direction: column; gap: 8px; padding: 0 6px 6px; }
+.quincena-card {
+  display: grid; grid-template-columns: 44px 1fr auto auto; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--bg-elevated); border: 1px solid var(--border-hairline);
+  transition: border-color .15s var(--ease), transform .15s var(--ease);
 }
-
-.current-pay-banner {
-  padding: 18px 22px;
+.quincena-card:hover { transform: translateY(-1px); border-color: var(--border-mid); }
+.quincena-card.is-actual {
   border-color: var(--accent-border);
-  background:
-    radial-gradient(circle at right top, rgba(99,179,237,.18), transparent 30%),
-    linear-gradient(135deg, rgba(99,179,237,.12), var(--bg-card));
+  background: linear-gradient(135deg, rgba(99,179,237,.08), var(--bg-elevated));
 }
+.qc-num {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; color: var(--accent-text);
+  background: var(--accent-dim); border: 1px solid var(--accent-border);
+}
+.qc-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.qc-range { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.qc-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qc-regs { font-size: 11.5px; color: var(--text-muted); }
+.qc-litros { text-align: right; white-space: nowrap; }
+.qc-pago { text-align: right; min-width: 92px; white-space: nowrap; }
 
-.current-pay-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .9px;
-  color: var(--accent-text);
-  margin-bottom: 8px;
-  font-weight: 700;
-}
+/* Helpers reutilizados en las tarjetas */
+.litros-strong { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.litros-strong span { color: var(--accent-text); font-size: 12px; }
+.payment-strong { color: var(--accent-text); font-weight: 700; }
+.payment-muted { color: var(--text-muted); font-size: 12px; }
 
-.current-pay-value {
-  font-size: 34px;
-  line-height: 1;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
+/* Píldoras de estado (compartidas con el resto del proyecto) */
+.status-pill { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.status-actual { color: var(--accent-text); background: var(--accent-dim); border: 1px solid var(--accent-border); }
+.status-cerrada { color: var(--blue-text); background: var(--blue-dim); border: 1px solid var(--blue-border); }
+.status-proxima { color: var(--amber-text); background: var(--amber-dim); border: 1px solid var(--amber-border); }
 
-.current-pay-meta {
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-  max-width: 760px;
-}
+/* Topbar helpers */
+.back-link { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+.back-link:hover { color: var(--text-primary); }
+.filtro-wrap input[type="number"] { background: none; border: none; outline: none; font-family: var(--font); font-size: 12px; color: var(--text-primary); width: 130px; }
 
-.stats-grid-quincena {
-  padding: 0;
-}
-
-.payment-history-card {
-  border-color: var(--accent-border);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
-
-.toolbar-inline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border-hairline);
-}
-
-.toolbar-inline .table-heading {
-  margin: 0;
-}
-
-.table-scroll {
-  overflow: auto;
-  max-height: 620px;
-}
-
-.table-scroll table {
-  min-width: 900px;
-}
-
-.row-actual {
-  background: rgba(91, 175, 89, 0.09);
-}
-
-.row-actual td {
-  box-shadow: inset 0 1px 0 rgba(91, 175, 89, 0.22), inset 0 -1px 0 rgba(91, 175, 89, 0.22);
-}
-
-.chip-date {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-hairline);
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.litros-strong {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.litros-strong span {
-  color: var(--accent-text);
-  font-size: 12px;
-}
-
-.payment-strong {
-  color: var(--accent-text);
-  font-weight: 700;
-}
-
-.payment-muted {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.status-actual {
-  color: var(--accent-text);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-}
-
-.status-cerrada {
-  color: var(--blue-text);
-  background: var(--blue-dim);
-  border: 1px solid var(--blue-border);
-}
-
-.status-proxima {
-  color: var(--amber-text);
-  background: var(--amber-dim);
-  border: 1px solid var(--amber-border);
-}
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.back-link:hover {
-  color: var(--text-primary);
-}
-
-.filtro-wrap input[type="number"] {
-  background: none;
-  border: none;
-  outline: none;
-  font-family: var(--font);
-  font-size: 12px;
-  color: var(--text-primary);
-  width: 130px;
-}
-
-.stat-value-date,
-.stat-value-payment {
-  font-size: 22px;
-}
-
-.empty-history {
-  padding: 28px 22px;
-  text-align: center;
-}
-
-.empty-history h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-
-.empty-history p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 14px;
-}
+/* Estado vacío */
+.empty-history { padding: 28px 22px; text-align: center; }
+.empty-history h3 { font-size: 18px; margin-bottom: 8px; }
+.empty-history p { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
 
 @media (max-width: 1180px) {
-  .stats-grid-quincena {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .resumen-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 700px) {
-  .page-shell {
-    padding: 16px;
-  }
-
-  .topbar {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 12px 16px;
-  }
-
-  .topbar-left,
-  .topbar-right {
-    width: 100%;
-  }
-
-  .topbar-right {
-    justify-content: flex-start;
-  }
-
-  .stats-grid-quincena {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-inline {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filtro-wrap {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .filtro-wrap input[type="number"] {
-    width: 100%;
-  }
+  .page-shell { padding: 16px; }
+  .topbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+  .topbar-left, .topbar-right { width: 100%; }
+  .topbar-right { justify-content: flex-start; }
+  .resumen-metrics { grid-template-columns: 1fr; }
+  .accion-card { flex-direction: column; align-items: stretch; }
+  .accion-form-row { flex-wrap: wrap; }
+  .filtro-wrap { width: 100%; flex-wrap: wrap; }
+  .filtro-wrap input[type="number"] { width: 100%; }
+  /* Tarjeta de quincena: num+datos arriba, litros+pago abajo */
+  .quincena-card { grid-template-columns: 44px 1fr; row-gap: 10px; }
+  .qc-litros, .qc-pago { text-align: left; }
 }
