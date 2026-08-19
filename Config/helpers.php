@@ -52,6 +52,39 @@ function env_value(string $key, ?string $default = null): ?string
     return $value === false ? $default : $value;
 }
 
+function app_url(string $path = ''): string
+{
+    $base = rtrim((string) env_value('APP_URL', ''), '/');
+    if (!filter_var($base, FILTER_VALIDATE_URL)) {
+        throw new RuntimeException('APP_URL no está configurada correctamente.');
+    }
+
+    return $base . '/' . ltrim($path, '/');
+}
+
+/** Envía el enlace temporal de recuperación sin incluir datos sensibles en logs. */
+function send_password_reset_email(string $correo, string $url): bool
+{
+    $from = (string) env_value('MAIL_FROM', '');
+    $fromName = (string) env_value('MAIL_FROM_NAME', 'AgroControl');
+    if (!filter_var($from, FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException('MAIL_FROM no está configurado correctamente.');
+    }
+
+    $subject = 'Recuperación de contraseña - AgroControl';
+    $message = "Solicitaste restablecer tu contraseña de AgroControl.\n\n"
+        . "Usa este enlace dentro de los próximos 30 minutos:\n{$url}\n\n"
+        . "Si no hiciste esta solicitud, puedes ignorar este correo.";
+    $safeName = str_replace(["\r", "\n"], '', $fromName);
+    $headers = [
+        'From: ' . $safeName . ' <' . $from . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+    ];
+
+    return @mail($correo, $subject, $message, implode("\r\n", $headers));
+}
+
 function app_log(string $message): void
 {
     $dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs';

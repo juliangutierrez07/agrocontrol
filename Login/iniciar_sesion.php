@@ -253,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="field-wrap">
                     <div class="field-label-row">
                         <label for="password" class="field-label">Contraseña</label>
-                        <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                        <a href="recuperar_contrasena.php" class="forgot-link">¿Olvidó su contraseña?</a>
                     </div>
                     <div class="field-input-wrap">
                         <span class="field-icon">

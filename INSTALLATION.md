@@ -63,6 +63,19 @@ CREATE TABLE usuarios (
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Enlaces temporales para recuperar contraseñas
+CREATE TABLE password_reset_tokens (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at    DATETIME NULL,
+    creado_en  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_password_reset_usuario (usuario_id),
+    INDEX idx_password_reset_expires (expires_at),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
 -- Vacas
 CREATE TABLE vacas (
     id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -195,3 +208,6 @@ chmod 775 Assets/Imagenes/vacas logs
 4. Programar backup automático de la base de datos
 5. Revisar las recomendaciones de cabeceras HTTP en `SECURITY.md`
 6. Rotar el directorio de logs periódicamente
+7. Configurar `APP_URL`, `MAIL_FROM` y el servicio de salida de correo del
+   contenedor PHP. La opción **¿Olvidó su contraseña?** usa correo nativo de
+   PHP y enlaces de un solo uso que vencen en 30 minutos.
