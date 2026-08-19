@@ -82,7 +82,101 @@ function send_password_reset_email(string $correo, string $url): bool
         'Content-Type: text/plain; charset=UTF-8',
     ];
 
+    if (strtolower((string) env_value('MAIL_TRANSPORT', 'mail')) === 'smtp') {
+        return send_smtp_email($correo, $subject, $message, $from, $safeName);
+    }
+
     return @mail($correo, $subject, $message, implode("\r\n", $headers));
+}
+
+/**
+ * Envía correo mediante SMTP autenticado. Las credenciales se leen únicamente
+ * desde variables de entorno y nunca se escriben en los logs.
+ */
+function send_smtp_email(string $to, string $subject, string $message, string $from, string $fromName): bool
+{
+    $host = (string) env_value('SMTP_HOST', '');
+    $port = (int) env_value('SMTP_PORT', '587');
+    $encryption = strtolower((string) env_value('SMTP_ENCRYPTION', 'tls'));
+    $user = (string) env_value('SMTP_USER', '');
+    $password = (string) env_value('SMTP_PASS', '');
+
+    if (!preg_match('/^[a-zA-Z0-9.-]+$/', $host) || $port < 1 || $port > 65535 || $user === '' || $password === '') {
+        throw new RuntimeException('La configuración SMTP no es válida.');
+    }
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        throw new InvalidArgumentException('El destinatario no es válido.');
+    }
+    if (!in_array($encryption, ['tls', 'ssl', 'none'], true)) {
+        throw new RuntimeException('SMTP_ENCRYPTION no es válido.');
+    }
+
+    $transport = $encryption === 'ssl' ? 'ssl://' : 'tcp://';
+    $socket = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 15, STREAM_CLIENT_CONNECT);
+    if (!$socket) {
+        throw new RuntimeException('No fue posible conectar al servidor SMTP.');
+    }
+
+    try {
+        stream_set_timeout($socket, 15);
+        smtp_expect($socket, [220]);
+        smtp_command($socket, 'EHLO agrocontrol', [250]);
+
+        if ($encryption === 'tls') {
+            smtp_command($socket, 'STARTTLS', [220]);
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                throw new RuntimeException('No fue posible habilitar TLS para SMTP.');
+            }
+            smtp_command($socket, 'EHLO agrocontrol', [250]);
+        }
+
+        smtp_command($socket, 'AUTH LOGIN', [334]);
+        smtp_command($socket, base64_encode($user), [334]);
+        smtp_command($socket, base64_encode($password), [235]);
+        smtp_command($socket, 'MAIL FROM:<' . $from . '>', [250]);
+        smtp_command($socket, 'RCPT TO:<' . $to . '>', [250, 251]);
+        smtp_command($socket, 'DATA', [354]);
+
+        $safeName = str_replace(["\r", "\n"], '', $fromName);
+        $data = 'From: ' . $safeName . ' <' . $from . ">\r\n"
+            . 'To: <' . $to . ">\r\n"
+            . 'Subject: ' . $subject . "\r\n"
+            . "MIME-Version: 1.0\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
+            . preg_replace('/(?m)^\./', '..', $message) . "\r\n.\r\n";
+        if (fwrite($socket, $data) === false) {
+            throw new RuntimeException('No fue posible enviar el mensaje SMTP.');
+        }
+        smtp_expect($socket, [250]);
+        smtp_command($socket, 'QUIT', [221]);
+        return true;
+    } finally {
+        fclose($socket);
+    }
+}
+
+function smtp_command($socket, string $command, array $expectedCodes): void
+{
+    if (fwrite($socket, $command . "\r\n") === false) {
+        throw new RuntimeException('No fue posible comunicarse con el servidor SMTP.');
+    }
+    smtp_expect($socket, $expectedCodes);
+}
+
+function smtp_expect($socket, array $expectedCodes): void
+{
+    $response = '';
+    while (($line = fgets($socket, 516)) !== false) {
+        $response .= $line;
+        if (preg_match('/^(\d{3}) /', $line, $matches)) {
+            $code = (int) $matches[1];
+            if (!in_array($code, $expectedCodes, true)) {
+                throw new RuntimeException('El servidor SMTP rechazó la solicitud (' . $code . ').');
+            }
+            return;
+        }
+    }
+    throw new RuntimeException('El servidor SMTP no respondió.');
 }
 
 function app_log(string $message): void

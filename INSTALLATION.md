@@ -208,6 +208,6 @@ chmod 775 Assets/Imagenes/vacas logs
 4. Programar backup automático de la base de datos
 5. Revisar las recomendaciones de cabeceras HTTP en `SECURITY.md`
 6. Rotar el directorio de logs periódicamente
-7. Configurar `APP_URL`, `MAIL_FROM` y el servicio de salida de correo del
-   contenedor PHP. La opción **¿Olvidó su contraseña?** usa correo nativo de
-   PHP y enlaces de un solo uso que vencen en 30 minutos.
+7. Configurar `APP_URL`, `MAIL_FROM`, `MAIL_TRANSPORT=smtp`, `SMTP_HOST`,
+   `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USER` y `SMTP_PASS`. La opción
+   **¿Olvidó su contraseña?** usa enlaces de un solo uso que vencen en 30 minutos.
