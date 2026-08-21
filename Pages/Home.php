@@ -167,10 +167,10 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon fi-amber">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 20a6.5 6.5 0 0113 0"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2l4 4"/><path d="M17 3l4 4"/><path d="M3 21l5.5-5.5"/><path d="M7.5 13.5l3 3"/><path d="M8.5 15.5l7-7 3 3-7 7z"/><path d="M2 22l2-5 3 3z"/></svg>
                     </div>
-                    <h3>Terneritos</h3>
-                    <p>Controla nacimientos,estado de salud de cada ternero desde el primer día.</p>
+                    <h3>Vacunaciones</h3>
+                    <p>Programa, registra y consulta las vacunas de cada animal.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon fi-green">
